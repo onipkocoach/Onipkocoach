@@ -10,47 +10,55 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-2 sm:p-6 pb-12">
 
-  <!-- Контейнер приложения -->
-  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[640px]">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[720px]">
     
-    <!-- Шапка -->
-    <header class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-6 relative">
+    <!-- Шапка профиля -->
+    <header class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-5 relative">
       <div class="flex justify-between items-start">
         <div>
-          <span class="inline-block bg-white/20 text-xs px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold mb-2">
+          <span class="inline-block bg-white/20 text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold mb-1">
             Плавание
           </span>
           <h1 class="text-2xl font-black tracking-tight leading-tight">Кирилл Онипко</h1>
-          <p class="text-blue-100 text-sm font-medium mt-0.5">Персональный тренер</p>
+          <p class="text-blue-100 text-xs font-medium">Персональный тренер</p>
         </div>
-        <!-- Кнопка админки с замком -->
-        <button id="adminBtn" onclick="toggleAdminAuth()" class="bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition text-white">
-          <i class="fa-solid fa-lock text-sm"></i>
+        <button onclick="toggleAdminAuth()" class="bg-white/10 hover:bg-white/25 p-2.5 rounded-full transition text-white">
+          <i class="fa-solid fa-lock text-xs"></i>
         </button>
       </div>
 
-      <!-- Быстрые ссылки тренера -->
-      <div class="mt-4 pt-3 border-t border-white/20 flex gap-2">
-        <a href="https://vk.ru/club239758541" target="_blank" class="flex-1 bg-white/15 hover:bg-white/25 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold backdrop-blur-sm transition">
-          <i class="fa-brands fa-vk text-base"></i> Магазин товаров
+      <div class="mt-3 pt-3 border-t border-white/20 flex gap-2">
+        <a href="https://vk.ru/club239758541" target="_blank" class="flex-1 bg-white/15 hover:bg-white/25 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-medium transition">
+          <i class="fa-brands fa-vk text-sm"></i> Группа VK
         </a>
-        <a href="https://t.me/kkkkk_ooooo" target="_blank" class="flex-1 bg-white/15 hover:bg-white/25 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold backdrop-blur-sm transition">
-          <i class="fa-brands fa-telegram text-base"></i> @kkkkk_ooooo
+        <a href="https://t.me/kkkkk_ooooo" target="_blank" class="flex-1 bg-white/15 hover:bg-white/25 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-medium transition">
+          <i class="fa-brands fa-telegram text-sm"></i> @kkkkk_ooooo
         </a>
       </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-    <main class="p-5 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Сюда динамически рендерится экран -->
+    <!-- Навигационные вкладки для ученика -->
+    <nav id="clientTabs" class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500">
+      <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-calendar-check"></i> Запись и профиль
+      </button>
+      <button onclick="switchTab('shop')" id="tabShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-700 transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-bag-shopping"></i> Магазин очков
+      </button>
+    </nav>
+
+    <!-- Основной контейнер экрана -->
+    <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
+      <!-- Динамический экран -->
     </main>
 
   </div>
 
   <script>
-    const ADMIN_PIN = "1234"; // Пароль тренера для входа
+    const ADMIN_PIN = "1234";
+    const TG_USERNAME = "kkkkk_ooooo";
 
     const defaultData = {
       clients: [
@@ -63,37 +71,251 @@
         { id: 3, day: "Четверг", time: "09:00", bookedBy: null },
         { id: 4, day: "Четверг", time: "15:00", bookedBy: null },
         { id: 5, day: "Суббота", time: "14:00", bookedBy: "1002" }
+      ],
+      products: [
+        {
+          id: 101,
+          title: "Mad Wave Alien",
+          price: 3490,
+          desc: "Инновационная гидродинамичная форма, мягкий силиконовый обтюратор TPE.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Серый / Желтый", "Черный / Синий", "Белый / Прозрачный"]
+        },
+        {
+          id: 102,
+          title: "Mad Wave Alien Rainbow",
+          price: 3990,
+          desc: "Стартовые очки с радужным зеркальным покрытием Rainbow и защитой UV/Antifog.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
+        },
+        {
+          id: 103,
+          title: "Mad Wave Aqua Fusion",
+          price: 2890,
+          desc: "Широкий обзор 180°, эргономичная посадка, комфортный монолитный силикон.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Прозрачный / Синий", "Дымчатый / Черный", "Прозрачный"]
+        },
+        {
+          id: 104,
+          title: "Mad Wave Aqua Fusion Mirror",
+          price: 3290,
+          desc: "Зеркальные стартово-тренировочные очки с панорамным обзором.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Зеркальный Синий", "Зеркальный Серебряный", "Черный"]
+        },
+        {
+          id: 105,
+          title: "Mad Wave Aqua Fusion Nano",
+          price: 3190,
+          desc: "Облегченная уменьшенная версия для подростков и пловцов с узким лицом.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Бело-бирюзовый", "Сине-белый", "Прозрачный"]
+        },
+        {
+          id: 106,
+          title: "Mad Wave Aqua Fusion Nano Mirror",
+          price: 3590,
+          desc: "Компактная Nano-посадка с зеркальным антибликовым напылением.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Зеркальный Розовый", "Зеркальный Синий", "Зеркальный Черный"]
+        },
+        {
+          id: 107,
+          title: "Mad Wave Forward Mirror",
+          price: 3390,
+          desc: "Низкопрофильные стартовые очки с зеркальными линзами для минимального сопротивления.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
+        },
+        {
+          id: 108,
+          title: "Mad Wave Record Breaker",
+          price: 2390,
+          desc: "Классические стартовые гидродинамические очки со сменными переносицами.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Прозрачный", "Дымчатый", "Синий", "Черный"]
+        },
+        {
+          id: 109,
+          title: "Mad Wave Record Breaker Mirror",
+          price: 2890,
+          desc: "Стартовая модель с зеркальным напылением от яркого света соревновательных бассейнов.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Серебро / Черный", "Золото / Синий", "Хром / Белый"]
+        },
+        {
+          id: 110,
+          title: "Mad Wave Record Breaker Rainbow",
+          price: 3190,
+          desc: "Радужное зеркальное покрытие линз со 100% защитой от ультрафиолета.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Радужный / Черный", "Радужный / Салатовый", "Радужный / Белый"]
+        },
+        {
+          id: 111,
+          title: "Mad Wave Record Breaker Nano",
+          price: 2590,
+          desc: "Уменьшенная модель Record Breaker для юниоров и девушек.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Прозрачно-розовый", "Голубой", "Дымчатый"]
+        },
+        {
+          id: 112,
+          title: "Mad Wave Record Breaker Nano Mirror",
+          price: 2990,
+          desc: "Юниорские зеркальные стартовые очки с ультратонкой обтюрацией.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Зеркальный Бирюзовый", "Зеркальный Розовый", "Зеркальный Серебро"]
+        },
+        {
+          id: 113,
+          title: "Mad Wave Record Breaker Nano Rainbow",
+          price: 3290,
+          desc: "Компактная Nano-серия с ярким переливающимся зеркальным покрытием.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Розовый"]
+        },
+        {
+          id: 114,
+          title: "Mad Wave Streamline Mirror",
+          price: 3490,
+          desc: "Одобрено World Aquatics (FINA). Аэродинамичный профиль для максимальной скорости.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Зеркальный Хром", "Зеркальный Золотой", "Зеркальный Синий"]
+        },
+        {
+          id: 115,
+          title: "Mad Wave Streamline Rainbow",
+          price: 3890,
+          desc: "Флагманская стартовая модель со сверхпрочным радужным покрытием линз.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Радужный / Черный", "Радужный / Синий", "Радужный / Белый"]
+        },
+        {
+          id: 116,
+          title: "Mad Wave Turbo Racer II",
+          price: 1490,
+          desc: "Классические жесткие стартовые шведки без уплотнителя для профессионалов.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Прозрачный", "Дымчатый", "Синий", "Красный"]
+        },
+        {
+          id: 117,
+          title: "Mad Wave Turbo Racer II Mirror",
+          price: 1890,
+          desc: "Стартовые шведки с зеркальным отражающим слоем. Максимальный гидродинамический эффект.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
+        },
+        {
+          id: 118,
+          title: "Mad Wave Turbo Racer II Rainbow",
+          price: 2190,
+          desc: "Шведки Turbo Racer II с ярким радужным зеркальным покрытием.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Rainbow Черный", "Rainbow Белый", "Rainbow Синий"]
+        },
+        {
+          id: 119,
+          title: "Mad Wave X-Blade Mirror",
+          price: 3990,
+          desc: "Агрессивный стартовый дизайн, плоская форма линз и жесткие боковые дужки.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Черно-золотой", "Бело-серебряный", "Сине-зеленый"]
+        },
+        {
+          id: 120,
+          title: "Mad Wave X-Look",
+          price: 2990,
+          desc: "Тренировочные очки с широким полем зрения и ультрамягким силиконом.",
+          image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+          colors: ["Прозрачно-черный", "Сине-белый", "Дымчатый"]
+        },
+        {
+          id: 121,
+          title: "Mad Wave X-Look Mirror",
+          price: 3490,
+          desc: "Зеркальная модификация очков X-Look для тренировок на открытой воде и в ярком бассейне.",
+          image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+          colors: ["Зеркальный Хром", "Зеркальный Синий", "Зеркальный Черный"]
+        },
+        {
+          id: 122,
+          title: "Mad Wave X-Look Rainbow",
+          price: 3790,
+          desc: "Комфортная посадка X-Look с эффектными переливающимися радужными линзами.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Голубой"]
+        }
       ]
     };
 
     function loadData() {
-      const data = localStorage.getItem("swimming_app_data");
+      const data = localStorage.getItem("swimming_app_data_v3");
       return data ? JSON.parse(data) : defaultData;
     }
 
     function saveData(data) {
-      localStorage.setItem("swimming_app_data", JSON.stringify(data));
+      localStorage.setItem("swimming_app_data_v3", JSON.stringify(data));
     }
 
     let state = {
       data: loadData(),
       currentView: 'client_login',
-      currentClientId: null
+      currentTab: 'booking',
+      currentClientId: null,
+      selectedColors: {}
     };
+
+    function switchTab(tab) {
+      state.currentTab = tab;
+      const tabBooking = document.getElementById('tabBooking');
+      const tabShop = document.getElementById('tabShop');
+      
+      if (tab === 'booking') {
+        tabBooking.className = "flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 font-bold transition flex items-center justify-center gap-1.5";
+        tabShop.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-500 font-semibold hover:text-slate-700 transition flex items-center justify-center gap-1.5";
+      } else {
+        tabShop.className = "flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 font-bold transition flex items-center justify-center gap-1.5";
+        tabBooking.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-500 font-semibold hover:text-slate-700 transition flex items-center justify-center gap-1.5";
+      }
+      render();
+    }
+
+    function selectColor(productId, color) {
+      state.selectedColors[productId] = color;
+      render();
+    }
+
+    function orderProduct(productId) {
+      const product = state.data.products.find(p => p.id === productId);
+      const chosenColor = state.selectedColors[productId] || (product.colors ? product.colors[0] : 'Стандартный');
+      const message = encodeURIComponent(`Здравствуйте, Кирилл! Хочу заказать очки: ${product.title}\nЦвет: ${chosenColor}\nЦена: ${product.price} ₽`);
+      window.open(`https://t.me/${TG_USERNAME}?text=${message}`, '_blank');
+    }
 
     function render() {
       const main = document.getElementById('appContent');
+      const nav = document.getElementById('clientTabs');
 
-      // 1. ЭКРАН ВХОДА ДЛЯ КЛИЕНТА
-      if (state.currentView === 'client_login') {
+      if (state.currentView === 'admin') {
+        nav.classList.add('hidden');
+      } else {
+        nav.classList.remove('hidden');
+      }
+
+      // 1. ВХОД ДЛЯ КЛИЕНТА
+      if (state.currentView === 'client_login' && state.currentTab === 'booking') {
         main.innerHTML = `
-          <div class="my-auto py-6">
+          <div class="my-auto py-8">
             <div class="text-center mb-6">
-              <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
+              <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
                 <i class="fa-solid fa-person-swimming"></i>
               </div>
               <h2 class="text-xl font-bold text-slate-800">Личный кабинет ученика</h2>
-              <p class="text-slate-500 text-xs mt-1">Введите ваш 4-значный номер или ID клиента</p>
+              <p class="text-slate-400 text-xs mt-1">Введите персональный 4-значный код</p>
             </div>
 
             <div class="space-y-3">
@@ -103,46 +325,100 @@
               </button>
             </div>
             
-            <p class="text-center text-xs text-slate-400 mt-6">Если у вас нет номера, напишите Кириллу в Telegram</p>
+            <p class="text-center text-xs text-slate-400 mt-6">Если у вас ещё нет кода, напишите Кириллу в Telegram</p>
           </div>
         `;
         return;
       }
 
-      // 2. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА
-      if (state.currentView === 'client_cabinet') {
+      // 2. ВИТРИНА МАГАЗИНА ОЧКОВ
+      if (state.currentTab === 'shop' && state.currentView !== 'admin') {
+        main.innerHTML = `
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <div>
+                <h2 class="text-base font-bold text-slate-800">Очки Mad Wave</h2>
+                <p class="text-[11px] text-slate-400">В наличии и под заказ • 22 модели</p>
+              </div>
+              <a href="https://vk.ru/club239758541" target="_blank" class="text-xs text-blue-600 font-semibold hover:underline">
+                Все в VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </a>
+            </div>
+
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              ${state.data.products.map(p => {
+                const activeColor = state.selectedColors[p.id] || (p.colors ? p.colors[0] : null);
+                return `
+                  <div class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-blue-300 transition">
+                    <div class="flex gap-3">
+                      <img src="${p.image}" alt="${p.title}" class="w-20 h-20 rounded-xl object-cover bg-slate-50 flex-shrink-0" onerror="this.src='https://placehold.co/100x100?text=Очки'">
+                      <div class="flex flex-col justify-between flex-1">
+                        <div>
+                          <h3 class="font-bold text-slate-800 text-xs leading-snug">${p.title}</h3>
+                          <p class="text-[11px] text-slate-400 line-clamp-2 mt-0.5">${p.desc}</p>
+                        </div>
+                        <span class="font-black text-blue-600 text-sm mt-1">${p.price} ₽</span>
+                      </div>
+                    </div>
+
+                    <!-- Выбор доступных расцветок -->
+                    ${p.colors ? `
+                      <div class="pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 items-center">
+                        <span class="text-[10px] text-slate-400 font-medium mr-1">Цвет:</span>
+                        ${p.colors.map(col => `
+                          <button onclick="selectColor(${p.id}, '${col}')" class="px-2 py-0.5 rounded-lg text-[10px] font-semibold border transition ${activeColor === col ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                            ${col}
+                          </button>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+
+                    <button onclick="orderProduct(${p.id})" class="w-full bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 mt-1">
+                      <i class="fa-brands fa-telegram text-sm"></i> Заказать в Telegram (${p.price} ₽)
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА
+      if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
         const client = state.data.clients.find(c => c.id === state.currentClientId);
         const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
         const freeSlots = state.data.slots.filter(s => !s.bookedBy);
 
         main.innerHTML = `
           <div>
-            <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
               <div>
-                <p class="text-xs text-slate-400">Ученик</p>
-                <h2 class="text-lg font-bold text-slate-800">${client.name}</h2>
+                <p class="text-[11px] text-slate-400">Ученик</p>
+                <h2 class="text-base font-bold text-slate-800">${client.name}</h2>
               </div>
-              <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти
+              <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500 font-medium">
+                Выйти <i class="fa-solid fa-arrow-right-from-bracket ml-0.5"></i>
               </button>
             </div>
 
-            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between mb-5">
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3.5 flex items-center justify-between mb-4">
               <div>
-                <span class="text-xs font-semibold text-blue-600 uppercase">Остаток тренировок</span>
-                <p class="text-3xl font-black text-blue-900 mt-0.5">${client.balance} <span class="text-sm font-medium">зан.</span></p>
+                <span class="text-[11px] font-bold text-blue-600 uppercase">Остаток тренировок</span>
+                <p class="text-2xl font-black text-blue-900 mt-0.5">${client.balance} <span class="text-xs font-medium">зан.</span></p>
               </div>
-              <a href="https://t.me/kkkkk_ooooo" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-xl font-medium shadow-sm transition">
+              <a href="https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Кирилл, добрый день! Хочу продлить абонемент на тренировки.')}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-xl font-bold shadow-sm transition">
                 Продлить
               </a>
             </div>
 
-            <div class="mb-5">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ваши активные записи</h3>
-              ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100">Пока нет записей. Выберите окно ниже.</p>' : ''}
-              <div class="space-y-2">
+            <div class="mb-4">
+              <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Ваши активные записи</h3>
+              ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Пока нет записей. Выберите окно ниже.</p>' : ''}
+              <div class="space-y-1.5">
                 ${mySlots.map(s => `
-                  <div class="flex justify-between items-center bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-xs">
+                  <div class="flex justify-between items-center bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl text-xs">
                     <span class="font-bold text-emerald-800"><i class="fa-regular fa-clock mr-1"></i> ${s.day} в ${s.time}</span>
                     <button onclick="cancelSlot(${s.id})" class="text-red-500 font-semibold hover:underline">Отменить</button>
                   </div>
@@ -151,13 +427,13 @@
             </div>
 
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Свободные окна тренера</h3>
-              <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Свободные окна тренера</h3>
+              <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                 ${freeSlots.length === 0 ? '<p class="text-xs text-slate-400">Свободных окон пока нет.</p>' : ''}
                 ${freeSlots.map(s => `
-                  <div class="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl text-xs hover:border-blue-200 transition">
+                  <div class="flex justify-between items-center bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs hover:border-blue-200 transition">
                     <span class="font-medium text-slate-700">${s.day},${s.time}</span>
-                    <button onclick="bookSlot(${s.id})" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition">Записаться</button>
+                    <button onclick="bookSlot(${s.id})" class="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold hover:bg-blue-700 transition">Записаться</button>
                   </div>
                 `).join('')}
               </div>
@@ -167,90 +443,86 @@
         return;
       }
 
-      // 3. ПАНЕЛЬ ТРЕНЕРА
+      // 4. ПАНЕЛЬ ТРЕНЕРА
       if (state.currentView === 'admin') {
         main.innerHTML = `
-          <div>
-            <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
               <div>
-                <span class="text-xs font-bold text-blue-600 uppercase">Режим тренера</span>
-                <h2 class="text-lg font-black text-slate-800">Управление клиентами</h2>
+                <span class="text-[10px] font-bold text-blue-600 uppercase">Режим тренера</span>
+                <h2 class="text-base font-black text-slate-800">Панель управления</h2>
               </div>
-              <button onclick="logout()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-medium">Закрыть</button>
+              <button onclick="logout()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-bold">Выйти</button>
             </div>
 
             <!-- Добавить ученика -->
-            <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl mb-4 text-xs space-y-2">
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Добавить нового ученика:</span>
               <div class="grid grid-cols-2 gap-2">
                 <input id="newClientName" placeholder="ФИО ученика" class="p-2 border rounded-xl bg-white" />
-                <input id="newClientCode" placeholder="Код/Тел (напр. 1003)" class="p-2 border rounded-xl bg-white" />
+                <input id="newClientCode" placeholder="Код (напр. 1003)" class="p-2 border rounded-xl bg-white" />
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border rounded-xl bg-white" />
-                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2 hover:bg-blue-700 transition">Добавить</button>
+                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2">Добавить</button>
               </div>
             </div>
 
-            <!-- Список учеников с балансом и удалением -->
-            <div class="mb-5">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Список учеников:</span>
-              <div class="space-y-2 max-h-44 overflow-y-auto pr-1">
-                ${state.data.clients.length === 0 ? '<p class="text-xs text-slate-400">Учеников пока нет.</p>' : ''}
+            <!-- Список учеников -->
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Ученики:</span>
+              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                 ${state.data.clients.map(c => `
-                  <div class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl text-xs shadow-sm">
+                  <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
                     <div>
-                      <p class="font-bold text-slate-800">${c.name} <span class="text-[10px] text-slate-400 font-normal">(${c.id})</span></p>
-                      <p class="text-blue-600 font-semibold mt-0.5">Баланс: ${c.balance} зан.</p>
+                      <p class="font-bold text-slate-800">${c.name} <span class="text-[10px] text-slate-400">(${c.id})</span></p>
+                      <p class="text-blue-600 font-semibold">Баланс: ${c.balance} зан.</p>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                      <button onclick="updateBalance('${c.id}', 1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-blue-100 font-bold" title="Прибавить занятие">+</button>
-                      <button onclick="updateBalance('${c.id}', -1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-red-100 font-bold" title="Списать занятие">-</button>
-                      <button onclick="deleteClient('${c.id}')" class="w-7 h-7 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg ml-1" title="Удалить ученика">
-                        <i class="fa-regular fa-trash-can text-xs"></i>
-                      </button>
+                    <div class="flex items-center gap-1">
+                      <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">+</button>
+                      <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">-</button>
+                      <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-50 text-red-500 rounded-md ml-1"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
                     </div>
                   </div>
                 `).join('')}
               </div>
             </div>
 
-            <!-- Добавить окно расписания -->
-            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2 mb-4">
+            <!-- Добавить окно -->
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Добавить окно в график:</span>
               <div class="flex gap-2">
                 <select id="newSlotDay" class="p-2 border rounded-xl bg-white flex-1">
-                  <option>Понедельник</option>
-                  <option>Вторник</option>
-                  <option>Среда</option>
-                  <option>Четверг</option>
-                  <option>Пятница</option>
-                  <option>Суббота</option>
-                  <option>Воскресенье</option>
+                  <option>Понедельник</option><option>Вторник</option><option>Среда</option><option>Четверг</option><option>Пятница</option><option>Суббота</option><option>Воскресенье</option>
                 </select>
                 <input id="newSlotTime" placeholder="10:00" class="w-20 p-2 border rounded-xl bg-white text-center" />
-                <button onclick="addSlot()" class="bg-slate-800 text-white px-3 rounded-xl font-bold hover:bg-slate-700 transition">ОК</button>
+                <button onclick="addSlot()" class="bg-slate-800 text-white px-3 rounded-xl font-bold">ОК</button>
               </div>
             </div>
 
-            <!-- Список всех окон с удалением -->
+            <!-- Список окон -->
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Все окна (расписание):</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все окна расписания:</span>
+              <div class="space-y-1 max-h-28 overflow-y-auto pr-1">
+                ${state.data.slots.map(s => `
+                  <div class="flex justify-between items-center bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs">
+                    <span>${s.day} ${s.time}${s.bookedBy ? '<b class="text-blue-600">(Занято)</b>' : ''}</span>
+                    <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Список товаров тренера с удалением -->
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Товары в каталоге (${state.data.products.length} шт):</span>
               <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                ${state.data.slots.length === 0 ? '<p class="text-xs text-slate-400">Окон пока нет.</p>' : ''}
-                ${state.data.slots.map(s => {
-                  const client = s.bookedBy ? state.data.clients.find(c => c.id === s.bookedBy) : null;
-                  return `
-                    <div class="flex justify-between items-center bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs">
-                      <div>
-                        <span class="font-semibold text-slate-800">${s.day} ${s.time}</span>${client ? `<span class="ml-2 text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-medium">${client.name}</span>` : '<span class="ml-2 text-slate-400 text-[10px]">Свободно</span>'}
-                      </div>
-                      <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600 p-1" title="Удалить это окно">
-                        <i class="fa-regular fa-trash-can text-xs"></i>
-                      </button>
-                    </div>
-                  `;
-                }).join('')}
+                ${state.data.products.map(p => `
+                  <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
+                    <span class="font-semibold truncate max-w-[200px]">${p.title} (${p.price} ₽)</span>
+                    <button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                  </div>
+                `).join('')}
               </div>
             </div>
 
@@ -260,7 +532,6 @@
     }
 
     // --- ЛОГИКА ---
-
     function loginClient() {
       const code = document.getElementById('clientCodeInput').value.trim();
       const client = state.data.clients.find(c => c.id === code || c.phone === code);
@@ -291,6 +562,7 @@
     function logout() {
       state.currentClientId = null;
       state.currentView = 'client_login';
+      state.currentTab = 'booking';
       render();
     }
 
@@ -320,7 +592,7 @@
       const name = document.getElementById('newClientName').value.trim();
       const code = document.getElementById('newClientCode').value.trim();
       const bal = parseInt(document.getElementById('newClientBal').value) || 0;
-      if (!name || !code) return alert("Заполните ФИО и Код");
+      if (!name || !code) return alert("Заполните имя и код");
 
       state.data.clients.push({ id: code, name: name, phone: code, balance: bal });
       saveData(state.data);
@@ -328,12 +600,8 @@
     }
 
     function deleteClient(clientId) {
-      if (!confirm("Вы уверены, что хотите удалить этого ученика?")) return;
-      // Освобождаем слоты этого клиента
-      state.data.slots.forEach(s => {
-        if (s.bookedBy === clientId) s.bookedBy = null;
-      });
-      // Удаляем клиента
+      if (!confirm("Удалить ученика?")) return;
+      state.data.slots.forEach(s => { if (s.bookedBy === clientId) s.bookedBy = null; });
       state.data.clients = state.data.clients.filter(c => c.id !== clientId);
       saveData(state.data);
       render();
@@ -353,24 +621,26 @@
       const time = document.getElementById('newSlotTime').value.trim();
       if (!time) return alert("Введите время");
 
-      state.data.slots.push({
-        id: Date.now(),
-        day: day,
-        time: time,
-        bookedBy: null
-      });
+      state.data.slots.push({ id: Date.now(), day: day, time: time, bookedBy: null });
       saveData(state.data);
       render();
     }
 
     function deleteSlot(slotId) {
-      if (!confirm("Удалить это окно из расписания?")) return;
+      if (!confirm("Удалить окно?")) return;
       state.data.slots = state.data.slots.filter(s => s.id !== slotId);
       saveData(state.data);
       render();
     }
 
-    // Первый запуск
+    function deleteProduct(prodId) {
+      if (!confirm("Удалить этот товар из витрины?")) return;
+      state.data.products = state.data.products.filter(p => p.id !== prodId);
+      saveData(state.data);
+      render();
+    }
+
+    // Запуск приложения
     render();
   </script>
 </body>
