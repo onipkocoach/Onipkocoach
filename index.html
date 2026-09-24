@@ -8,13 +8,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-2 sm:p-6 pb-12">
 
-  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[720px] relative">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[750px] relative">
     
-    <!-- Шапка профиля -->
+    <!-- Шапка профиля тренера -->
     <header class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-5 relative">
       <div class="flex justify-between items-start">
         <div>
@@ -24,7 +26,7 @@
           <h1 class="text-2xl font-black tracking-tight leading-tight">Кирилл Онипко</h1>
           <p class="text-blue-100 text-xs font-medium">Персональный тренер</p>
         </div>
-        <button onclick="toggleAdminAuth()" class="bg-white/10 hover:bg-white/25 p-2.5 rounded-full transition text-white">
+        <button onclick="toggleAdminAuth()" class="bg-white/10 hover:bg-white/25 p-2.5 rounded-full transition text-white" title="Панель тренера">
           <i class="fa-solid fa-lock text-xs"></i>
         </button>
       </div>
@@ -42,26 +44,48 @@
     <!-- Навигационные вкладки -->
     <nav id="clientTabs" class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500">
       <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 transition flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-calendar-check"></i> Запись и профиль
+        <i class="fa-solid fa-user"></i> Профиль и запись
       </button>
       <button onclick="switchTab('shop')" id="tabShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-700 transition flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-bag-shopping"></i> Магазин очков
+        <i class="fa-solid fa-bag-shopping"></i> Магазин товаров
       </button>
     </nav>
 
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Контент -->
+      <!-- Динамический контент -->
     </main>
 
-    <!-- Всплывающая карточка подробного описания товара -->
+    <!-- Модалка просмотра товара -->
     <div id="productModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 relative">
         <button onclick="closeProductModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
-
         <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <!-- Модалка редактирования товара тренером -->
+    <div id="editProductModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-md rounded-3xl p-5 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="closeEditProductModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-base font-bold text-slate-800 mb-3">Редактировать товар</h3>
+        <div id="editProductForm" class="space-y-2 text-xs"></div>
+      </div>
+    </div>
+
+    <!-- Модалка добавления видео ученику тренером -->
+    <div id="videoModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-md rounded-3xl p-5 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="closeVideoModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-base font-bold text-slate-800 mb-1">Видео с тренировок</h3>
+        <p id="videoModalClientName" class="text-xs text-blue-600 font-semibold mb-3"></p>
+        <div id="videoModalContent" class="space-y-3 text-xs"></div>
       </div>
     </div>
 
@@ -70,193 +94,61 @@
   <script>
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
-    const STORAGE_KEY = "kirill_coach_storage";
+    const STORAGE_KEY = "kirill_swimming_v5";
 
-    // Базовый стартовый каталог очков Mad Wave
+    const defaultCategories = ["Очки", "Шапочки", "Инвентарь"];
+
     const defaultProducts = [
       {
         id: 101,
+        category: "Очки",
         title: "Mad Wave Alien",
         price: 3490,
-        desc: "Стартово-тренировочные очки с гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу, не пропуская воду. В комплекте 4 сменные носовые перемычки и двойной силиконовый ремешок.",
+        desc: "Стартово-тренировочные очки с инновационной гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу. 4 сменные переносицы.",
         image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
         colors: ["Серый / Желтый", "Черный / Дымчатый", "Белый / Прозрачный"]
       },
       {
         id: 102,
+        category: "Очки",
         title: "Mad Wave Alien Rainbow",
         price: 3990,
-        desc: "Флагманская версия очков Alien со специальным многослойным радужным зеркальным напылением Rainbow. Идеально защищают от ярких прожекторов и солнечных бликов. Защита UV 400 и покрытие Antifog.",
+        desc: "Стартовая версия со специальным радужным зеркальным напылением Rainbow. Защита от бликов, UV 400 и Antifog.",
         image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
         colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
       },
       {
         id: 103,
+        category: "Очки",
         title: "Mad Wave Aqua Fusion",
         price: 2890,
-        desc: "Панорамные очки для плавания с широким углом обзора свыше 180°. Монолитная сверхмягкая оправа из силикона гарантирует идеальную посадку без сдавливания глазниц.",
+        desc: "Панорамные очки для интенсивных заплывов. Обзор свыше 180° без оптических искажений. Монолитная сверхмягкая оправа.",
         image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Прозрачный / Синий", "Дымчатый / Черный", "Прозрачный"]
+        colors: ["Прозрачный / Синий", "Дымчатый / Черный"]
       },
       {
         id: 104,
-        title: "Mad Wave Aqua Fusion Mirror",
-        price: 3290,
-        desc: "Зеркальная соревновательная модификация очков Aqua Fusion с антибликовым фильтром и панорамным обзором.",
+        category: "Очки",
+        title: "Mad Wave Record Breaker Mirror",
+        price: 2890,
+        desc: "Стартовая модель с зеркальным напылением линз. Одобрено World Aquatics (FINA). Жесткая посадка со старта.",
         image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Зеркальный Синий", "Зеркальный Серебряный", "Черный хром"]
+        colors: ["Серебро / Черный", "Золото / Синий"]
       },
       {
         id: 105,
-        title: "Mad Wave Aqua Fusion Nano",
-        price: 3190,
-        desc: "Уменьшенная модель (Nano) для детей, подростков и спортсменов с узким типом лица.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Бело-бирюзовый", "Сине-белый", "Прозрачный"]
-      },
-      {
-        id: 106,
-        title: "Mad Wave Aqua Fusion Nano Mirror",
-        price: 3590,
-        desc: "Юниорские зеркальные очки с компактной оправой Nano и зеркальным напылением.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Зеркальный Розовый", "Зеркальный Синий", "Зеркальный Серебро"]
-      },
-      {
-        id: 107,
-        title: "Mad Wave Forward Mirror",
-        price: 3390,
-        desc: "Стартовые низкопрофильные очки для соревнований. Оптимальная гидродинамика и зеркальные линзы.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
-      },
-      {
-        id: 108,
-        title: "Mad Wave Record Breaker",
-        price: 2390,
-        desc: "Классические стартовые гидродинамические очки с тончайшим уплотнителем для надежной фиксации со старта.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Прозрачный", "Дымчатый", "Синий", "Черный"]
-      },
-      {
-        id: 109,
-        title: "Mad Wave Record Breaker Mirror",
-        price: 2890,
-        desc: "Стартовые очки Record Breaker с зеркальными соревновательными линзами. Одобрено FINA / World Aquatics.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Серебро / Черный", "Золото / Синий", "Хром / Белый"]
-      },
-      {
-        id: 110,
-        title: "Mad Wave Record Breaker Rainbow",
-        price: 3190,
-        desc: "Стартовая модель с радужными зеркальными линзами Rainbow и защитой от ультрафиолета.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Радужный / Черный", "Радужный / Салатовый", "Радужный / Белый"]
-      },
-      {
-        id: 111,
-        title: "Mad Wave Record Breaker Nano",
-        price: 2590,
-        desc: "Уменьшенная версия стартовых очков Record Breaker для юниоров.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Прозрачно-розовый", "Голубой", "Дымчатый"]
-      },
-      {
-        id: 112,
-        title: "Mad Wave Record Breaker Nano Mirror",
-        price: 2990,
-        desc: "Зеркальные стартовые очки Nano для юных спортсменов.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Зеркальный Бирюзовый", "Зеркальный Розовый", "Зеркальный Черный"]
-      },
-      {
-        id: 113,
-        title: "Mad Wave Record Breaker Nano Rainbow",
-        price: 3290,
-        desc: "Яркие соревновательные очки с уменьшенной посадкой и радужным зеркальным покрытием.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Розовый"]
-      },
-      {
-        id: 114,
-        title: "Mad Wave Streamline Mirror",
-        price: 3490,
-        desc: "Спортивные очки с обтекаемой формой Streamline для минимального сопротивления воды. Одобрено World Aquatics.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Зеркальный Хром", "Зеркальный Золотой", "Зеркальный Синий"]
-      },
-      {
-        id: 115,
-        title: "Mad Wave Streamline Rainbow",
-        price: 3890,
-        desc: "Флагманская модель Streamline со сверкающими радужными линзами Rainbow.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Радужный / Черный", "Радужный / Синий", "Радужный / Белый"]
-      },
-      {
-        id: 116,
+        category: "Очки",
         title: "Mad Wave Turbo Racer II",
         price: 1490,
-        desc: "Классические стартовые жесткие шведки без уплотнителя. Точная посадка и максимальная гидродинамика.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Прозрачный", "Дымчатый", "Синий", "Красный"]
-      },
-      {
-        id: 117,
-        title: "Mad Wave Turbo Racer II Mirror",
-        price: 1890,
-        desc: "Соревновательные шведки Turbo Racer II с зеркальным покрытием.",
+        desc: "Классические стартовые стекляшки-шведки без уплотнителя. Максимальная гидродинамика.",
         image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
-      },
-      {
-        id: 118,
-        title: "Mad Wave Turbo Racer II Rainbow",
-        price: 2190,
-        desc: "Шведки Turbo Racer II с радужным отражающим зеркальным фильтром.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Rainbow Черный", "Rainbow Белый", "Rainbow Синий"]
-      },
-      {
-        id: 119,
-        title: "Mad Wave X-Blade Mirror",
-        price: 3990,
-        desc: "Агрессивный соревновательный профиль и жесткие дужки для фиксации на мощном старте.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Черно-золотой", "Бело-серебряный", "Сине-зеленый"]
-      },
-      {
-        id: 120,
-        title: "Mad Wave X-Look",
-        price: 2990,
-        desc: "Очки для длительных тренировок в бассейне. Широкие линзы и мягкий комфортный силикон.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
-        colors: ["Прозрачно-черный", "Сине-белый", "Дымчатый"]
-      },
-      {
-        id: 121,
-        title: "Mad Wave X-Look Mirror",
-        price: 3490,
-        desc: "Зеркальная модель X-Look для открытой воды и бассейнов с ярким светом.",
-        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
-        colors: ["Зеркальный Хром", "Зеркальный Синий", "Зеркальный Черный"]
-      },
-      {
-        id: 122,
-        title: "Mad Wave X-Look Rainbow",
-        price: 3790,
-        desc: "Тренировочные очки X-Look с яркими радужными линзами Rainbow.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Голубой"]
+        colors: ["Прозрачный", "Дымчатый", "Синий"]
       }
     ];
 
     function loadData() {
       const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        return JSON.parse(data);
-      }
+      if (data) return JSON.parse(data);
       return {
         clients: [],
         slots: [
@@ -266,6 +158,7 @@
           { id: 4, day: "Четверг", time: "15:00", bookedBy: null },
           { id: 5, day: "Суббота", time: "14:00", bookedBy: null }
         ],
+        categories: defaultCategories,
         products: defaultProducts
       };
     }
@@ -279,7 +172,9 @@
       currentView: 'client_login',
       currentTab: 'booking',
       currentClientId: null,
-      selectedColors: {}
+      selectedCategory: 'Все',
+      selectedColors: {},
+      videoTargetClientId: null
     };
 
     function switchTab(tab) {
@@ -297,6 +192,12 @@
       render();
     }
 
+    function setShopCategory(cat) {
+      state.selectedCategory = cat;
+      render();
+    }
+
+    // --- МОДАЛКА ПРОСМОТРА ТОВАРА ---
     function openProductModal(productId) {
       const product = state.data.products.find(p => p.id === productId);
       if (!product) return;
@@ -307,9 +208,12 @@
       modalContent.innerHTML = `
         <div class="text-center pt-2">
           <div class="w-full h-56 bg-slate-50 rounded-2xl flex items-center justify-center p-3 mb-4 border border-slate-100 overflow-hidden">
-            <img src="${product.image}" alt="${product.title}" class="max-h-full max-w-full object-cover rounded-xl" onerror="this.src='https://placehold.co/400x300?text=Очки+MadWave'">
+            <img src="${product.image}" alt="${product.title}" class="max-h-full max-w-full object-cover rounded-xl" onerror="this.src='https://placehold.co/400x300?text=Товар'">
           </div>
           
+          <div class="text-left mb-1">
+            <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold">${product.category || 'Товар'}</span>
+          </div>
           <h2 class="text-xl font-black text-slate-800 text-left leading-tight">${product.title}</h2>
           <p class="text-2xl font-black text-blue-600 text-left mt-1 mb-4">${product.price} ₽</p>
 
@@ -318,7 +222,7 @@
             <p class="text-xs text-slate-600 leading-relaxed">${product.desc}</p>
           </div>
 
-          ${product.colors ? `
+          ${product.colors && product.colors.length ? `
             <div class="text-left mb-6">
               <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Выберите цвет:</h4>
               <div class="flex flex-wrap gap-2">
@@ -358,11 +262,156 @@
 
     function orderProduct(productId) {
       const product = state.data.products.find(p => p.id === productId);
-      const chosenColor = state.selectedColors[productId] || (product.colors ? product.colors[0] : 'Стандартный');
-      const message = encodeURIComponent(`Здравствуйте, Кирилл! Хочу заказать очки: ${product.title}\nЦвет: ${chosenColor}\nЦена: ${product.price} ₽`);
+      const chosenColor = state.selectedColors[productId] || (product.colors && product.colors.length ? product.colors[0] : 'Стандартный');
+      const message = encodeURIComponent(`Здравствуйте, Кирилл! Хочу заказать товар: ${product.title}\nКатегория: ${product.category || 'Плавание'}\nЦвет: ${chosenColor}\nЦена: ${product.price} ₽`);
       window.open(`https://t.me/${TG_USERNAME}?text=${message}`, '_blank');
     }
 
+    // --- РЕДАКТИРОВАНИЕ ТОВАРА ТРЕНЕРОМ ---
+    function openEditProductModal(productId) {
+      const p = state.data.products.find(item => item.id === productId);
+      if (!p) return;
+
+      const cats = state.data.categories || defaultCategories;
+      const form = document.getElementById('editProductForm');
+      form.innerHTML = `
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">Название:</label>
+          <input id="editTitle" value="${p.title}" class="w-full p-2 border rounded-xl bg-slate-50" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-600 block mb-1">Категория:</label>
+            <select id="editCategory" class="w-full p-2 border rounded-xl bg-slate-50">
+              ${cats.map(c => `<option value="${c}" ${p.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-600 block mb-1">Цена (₽):</label>
+            <input id="editPrice" type="number" value="${p.price}" class="w-full p-2 border rounded-xl bg-slate-50" />
+          </div>
+        </div>
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">Ссылка на фото:</label>
+          <input id="editImage" value="${p.image}" class="w-full p-2 border rounded-xl bg-slate-50" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">Цвета (через запятую):</label>
+          <input id="editColors" value="${p.colors ? p.colors.join(', ') : ''}" placeholder="Черный, Синий, Красный" class="w-full p-2 border rounded-xl bg-slate-50" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">Описание:</label>
+          <textarea id="editDesc" class="w-full p-2 border rounded-xl bg-slate-50 h-20">${p.desc || ''}</textarea>
+        </div>
+        <button onclick="saveProductChanges(${p.id})" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-blue-700 transition">
+          Сохранить изменения
+        </button>
+      `;
+
+      document.getElementById('editProductModal').classList.remove('hidden');
+    }
+
+    function saveProductChanges(productId) {
+      const p = state.data.products.find(item => item.id === productId);
+      if (!p) return;
+
+      p.title = document.getElementById('editTitle').value.trim();
+      p.category = document.getElementById('editCategory').value;
+      p.price = parseInt(document.getElementById('editPrice').value) || 0;
+      p.image = document.getElementById('editImage').value.trim();
+      p.desc = document.getElementById('editDesc').value.trim();
+
+      const colorsVal = document.getElementById('editColors').value.trim();
+      p.colors = colorsVal ? colorsVal.split(',').map(c => c.trim()).filter(Boolean) : [];
+
+      saveData(state.data);
+      closeEditProductModal();
+      render();
+      alert("Товар успешно обновлен!");
+    }
+
+    function closeEditProductModal() {
+      document.getElementById('editProductModal').classList.add('hidden');
+    }
+
+    // --- УПРАВЛЕНИЕ ВИДЕО ТРЕНИРОВОК ---
+    function openVideoModal(clientId) {
+      state.videoTargetClientId = clientId;
+      const client = state.data.clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      document.getElementById('videoModalClientName').textContent = `Ученик: ${client.name} (Код: ${client.id})`;
+      renderVideoModalContent(client);
+      document.getElementById('videoModal').classList.remove('hidden');
+    }
+
+    function renderVideoModalContent(client) {
+      client.videos = client.videos || [];
+      const content = document.getElementById('videoModalContent');
+      content.innerHTML = `
+        <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-2">
+          <span class="font-bold text-slate-700 block">Добавить видео для этого ученика:</span>
+          <input id="newVideoTitle" placeholder="Тема (напр. Разбор гребка кролем)" class="w-full p-2 border rounded-xl bg-white" />
+          <input id="newVideoUrl" placeholder="Ссылка на видео (VK / YouTube / Rutube / прямая mp4)" class="w-full p-2 border rounded-xl bg-white" />
+          <button onclick="addClientVideo('${client.id}')" class="w-full bg-blue-600 text-white font-bold py-2 rounded-xl">Загрузить видео</button>
+        </div>
+
+        <div>
+          <span class="font-bold text-slate-500 uppercase text-[10px] block mb-2">Загруженные видео (${client.videos.length}):</span>
+          <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            ${client.videos.length === 0 ? '<p class="text-slate-400">Видео пока не загружены.</p>' : ''}
+            ${client.videos.map((v, idx) => `
+              <div class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl">
+                <div class="truncate pr-2">
+                  <p class="font-bold text-slate-800 truncate">${v.title}</p>
+                  <a href="${v.url}" target="_blank" class="text-blue-500 text-[10px] truncate block">${v.url}</a>
+                </div>
+                <button onclick="deleteClientVideo('${client.id}',${idx})" class="text-red-400 hover:text-red-600 p-1">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addClientVideo(clientId) {
+      const title = document.getElementById('newVideoTitle').value.trim();
+      const url = document.getElementById('newVideoUrl').value.trim();
+      if (!title || !url) return alert("Введите тему и ссылку на видео");
+
+      const client = state.data.clients.find(c => c.id === clientId);
+      client.videos = client.videos || [];
+      client.videos.unshift({ title, url, date: new Date().toLocaleDateString('ru-RU') });
+      saveData(state.data);
+      renderVideoModalContent(client);
+    }
+
+    function deleteClientVideo(clientId, index) {
+      if (!confirm("Удалить это видео?")) return;
+      const client = state.data.clients.find(c => c.id === clientId);
+      client.videos.splice(index, 1);
+      saveData(state.data);
+      renderVideoModalContent(client);
+    }
+
+    function closeVideoModal() {
+      document.getElementById('videoModal').classList.add('hidden');
+    }
+
+    // --- ОБНОВЛЕНИЕ АВАТАРКИ КЛИЕНТОМ ---
+    function changeAvatar() {
+      const client = state.data.clients.find(c => c.id === state.currentClientId);
+      const url = prompt("Вставьте прямую ссылку на ваше фото (из VK или интернета):", client.avatar || "");
+      if (url !== null) {
+        client.avatar = url.trim();
+        saveData(state.data);
+        render();
+      }
+    }
+
+    // --- РЕНДЕР ИНТЕРФЕЙСА ---
     function render() {
       const main = document.getElementById('appContent');
       const nav = document.getElementById('clientTabs');
@@ -378,7 +427,7 @@
         main.innerHTML = `
           <div class="my-auto py-8">
             <div class="text-center mb-6">
-              <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
+              <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-sm">
                 <i class="fa-solid fa-person-swimming"></i>
               </div>
               <h2 class="text-xl font-bold text-slate-800">Личный кабинет ученика</h2>
@@ -398,32 +447,49 @@
         return;
       }
 
-      // 2. ВИТРИНА МАГАЗИНА
+      // 2. ВИТРИНА МАГАЗИНА С КАТЕГОРИЯМИ И ФИЛЬТРАМИ
       if (state.currentTab === 'shop' && state.currentView !== 'admin') {
+        const categories = ["Все", ...(state.data.categories || defaultCategories)];
+        const filteredProducts = state.selectedCategory === "Все" 
+          ? state.data.products 
+          : state.data.products.filter(p => p.category === state.selectedCategory);
+
         main.innerHTML = `
           <div>
             <div class="flex justify-between items-center mb-3">
               <div>
-                <h2 class="text-base font-bold text-slate-800">Очки Mad Wave</h2>
-                <p class="text-[11px] text-slate-400">Нажмите на карточку для описания и фото</p>
+                <h2 class="text-base font-bold text-slate-800">Магазин экипировки</h2>
+                <p class="text-[11px] text-slate-400">Товары для плавания от тренера</p>
               </div>
               <a href="https://vk.ru/club239758541" target="_blank" class="text-xs text-blue-600 font-semibold hover:underline">
                 Все в VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
               </a>
             </div>
 
+            <!-- Горизонтальная прокрутка категорий -->
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3">
+              ${categories.map(cat => `
+                <button onclick="setShopCategory('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${state.selectedCategory === cat ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+                  ${cat}
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Список товаров -->
             <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-              ${state.data.products.map(p => {
-                const activeColor = state.selectedColors[p.id] || (p.colors ? p.colors[0] : null);
+              ${filteredProducts.length === 0 ? '<p class="text-xs text-slate-400 text-center py-6">В этом разделе пока нет товаров.</p>' : ''}
+              ${filteredProducts.map(p => {
+                const activeColor = state.selectedColors[p.id] || (p.colors && p.colors.length ? p.colors[0] : null);
                 return `
-                  <div onclick="openProductModal(${p.id})" class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-blue-300 transition cursor-pointer">
+                  <div onclick="openProductModal(${p.id})" class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col gap-2 shadow-sm hover:border-blue-300 transition cursor-pointer">
                     <div class="flex gap-3 items-center">
                       <div class="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 border border-slate-100 overflow-hidden">
-                        <img src="${p.image}" alt="${p.title}" class="h-full w-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100?text=Очки'">
+                        <img src="${p.image}" alt="${p.title}" class="h-full w-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100?text=Товар'">
                       </div>
                       <div class="flex flex-col justify-between flex-1 min-w-0">
                         <div>
-                          <h3 class="font-bold text-slate-800 text-xs leading-snug truncate">${p.title}</h3>
+                          <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold">${p.category || 'Плавание'}</span>
+                          <h3 class="font-bold text-slate-800 text-xs leading-snug truncate mt-0.5">${p.title}</h3>
                           <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">${p.desc}</p>
                         </div>
                         <div class="flex justify-between items-center mt-1">
@@ -433,7 +499,7 @@
                       </div>
                     </div>
 
-                    ${p.colors ? `
+                    ${p.colors && p.colors.length ? `
                       <div class="pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 items-center" onclick="event.stopPropagation()">
                         <span class="text-[10px] text-slate-400 font-medium mr-1">Цвет:</span>
                         ${p.colors.map(col => `
@@ -456,35 +522,70 @@
         return;
       }
 
-      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА
+      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА (С АВАТАРКОЙ И ВИДЕО)
       if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
         const client = state.data.clients.find(c => c.id === state.currentClientId);
         const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
         const freeSlots = state.data.slots.filter(s => !s.bookedBy);
+        const videos = client.videos || [];
 
         main.innerHTML = `
-          <div>
-            <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
-              <div>
-                <p class="text-[11px] text-slate-400">Ученик</p>
-                <h2 class="text-base font-bold text-slate-800">${client.name}</h2>
+          <div class="space-y-4">
+            <!-- Шапка профиля ученика с аватаркой -->
+            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="relative cursor-pointer" onclick="changeAvatar()" title="Нажмите, чтобы сменить фото">
+                  <img src="${client.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Фото'">
+                  <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white">✏️</span>
+                </div>
+                <div>
+                  <h2 class="text-sm font-bold text-slate-800 leading-tight">${client.name}</h2>
+                  <p class="text-[10px] text-slate-400 mt-0.5">ID: ${client.id} • <span onclick="changeAvatar()" class="text-blue-500 hover:underline cursor-pointer">Сменить фото</span></p>
+                </div>
               </div>
               <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500 font-medium">
                 Выйти <i class="fa-solid fa-arrow-right-from-bracket ml-0.5"></i>
               </button>
             </div>
 
-            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3.5 flex items-center justify-between mb-4">
+            <!-- Баланс тренировок -->
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3.5 flex items-center justify-between">
               <div>
-                <span class="text-[11px] font-bold text-blue-600 uppercase">Остаток тренировок</span>
+                <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Остаток тренировок</span>
                 <p class="text-2xl font-black text-blue-900 mt-0.5">${client.balance} <span class="text-xs font-medium">зан.</span></p>
               </div>
-              <a href="https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Кирилл, добрый день! Хочу продлить абонемент на тренировки.')}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-xl font-bold shadow-sm transition">
+              <a href="https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Кирилл, добрый день! Хочу продлить абонемент на тренировки.')}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow-sm transition">
                 Продлить
               </a>
             </div>
 
-            <div class="mb-4">
+            <!-- Блок персональных видео с тренировок -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <i class="fa-solid fa-video text-blue-500 mr-1"></i> Видео с ваших тренировок (${videos.length})
+                </h3>
+              </div>
+              ${videos.length === 0 
+                ? '<div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl text-xs text-slate-400 text-center">Тренер пока не прикрепил видео. Они появятся здесь после тренировки.</div>'
+                : `<div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    ${videos.map(v => `
+                      <div class="bg-slate-900 text-white p-3 rounded-2xl flex flex-col gap-2">
+                        <div class="flex justify-between items-center text-xs">
+                          <span class="font-bold truncate pr-2">${v.title}</span>
+                          <span class="text-[10px] text-slate-400">${v.date || ''}</span>
+                        </div>
+                        <a href="${v.url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-center text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5">
+                          <i class="fa-solid fa-play text-xs"></i> Смотреть видео
+                        </a>
+                      </div>
+                    `).join('')}
+                  </div>`
+              }
+            </div>
+
+            <!-- Активные записи -->
+            <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Ваши активные записи</h3>
               ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Пока нет записей. Выберите окно ниже.</p>' : ''}
               <div class="space-y-1.5">
@@ -497,9 +598,10 @@
               </div>
             </div>
 
+            <!-- Окна для записи -->
             <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Свободные окна тренера</h3>
-              <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                 ${freeSlots.length === 0 ? '<p class="text-xs text-slate-400">Свободных окон пока нет.</p>' : ''}
                 ${freeSlots.map(s => `
                   <div class="flex justify-between items-center bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs hover:border-blue-200 transition">
@@ -516,6 +618,8 @@
 
       // 4. ПАНЕЛЬ ТРЕНЕРА
       if (state.currentView === 'admin') {
+        const categories = state.data.categories || defaultCategories;
+
         main.innerHTML = `
           <div class="space-y-4">
             <div class="flex justify-between items-center pb-2 border-b border-slate-100">
@@ -535,25 +639,28 @@
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border rounded-xl bg-white" />
-                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2">Добавить</button>
+                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2 shadow-sm">Добавить</button>
               </div>
             </div>
 
-            <!-- Список учеников -->
+            <!-- Список учеников с кнопкой видео -->
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Ученики (${state.data.clients.length} чел):</span>
-              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                ${state.data.clients.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2 rounded-xl">Учеников пока нет. Добавьте первого выше.</p>' : ''}
+              <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                ${state.data.clients.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2 rounded-xl">Учеников пока нет.</p>' : ''}
                 ${state.data.clients.map(c => `
                   <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
-                    <div>
-                      <p class="font-bold text-slate-800">${c.name} <span class="text-[10px] text-slate-400">(${c.id})</span></p>
-                      <p class="text-blue-600 font-semibold">Баланс: ${c.balance} зан.</p>
+                    <div class="truncate pr-1">
+                      <p class="font-bold text-slate-800 truncate">${c.name} <span class="text-[10px] text-slate-400">(${c.id})</span></p>
+                      <p class="text-blue-600 font-semibold">${c.balance} зан. • <span class="text-slate-500">${(c.videos || []).length} видео</span></p>
                     </div>
-                    <div class="flex items-center gap-1">
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                      <button onclick="openVideoModal('${c.id}')" class="px-2 py-1 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-md font-bold text-[10px]" title="Добавить видео">
+                        🎬 Видео
+                      </button>
                       <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">+</button>
                       <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">-</button>
-                      <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-50 text-red-500 rounded-md ml-1"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+                      <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-50 text-red-500 rounded-md"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
                     </div>
                   </div>
                 `).join('')}
@@ -572,39 +679,59 @@
               </div>
             </div>
 
-            <!-- Список окон -->
-            <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все окна расписания:</span>
-              <div class="space-y-1 max-h-28 overflow-y-auto pr-1">
-                ${state.data.slots.map(s => `
-                  <div class="flex justify-between items-center bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs">
-                    <span>${s.day} ${s.time}${s.bookedBy ? '<b class="text-blue-600">(Занято)</b>' : ''}</span>
-                    <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can text-xs"></i></button>
-                  </div>
+            <!-- Управление категориями магазина -->
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
+              <span class="font-bold text-slate-700 block">Разделы (категории) магазина:</span>
+              <div class="flex gap-2">
+                <input id="newCategoryInput" placeholder="Новый раздел (напр. Ласты)" class="p-2 border rounded-xl bg-white flex-1" />
+                <button onclick="addCategory()" class="bg-blue-600 text-white px-3 rounded-xl font-bold">Добавить</button>
+              </div>
+              <div class="flex flex-wrap gap-1 pt-1">
+                ${categories.map(cat => `
+                  <span class="bg-white border border-slate-200 px-2 py-0.5 rounded-lg text-[10px] font-semibold flex items-center gap-1">
+                    ${cat}
+                    <button onclick="deleteCategory('${cat}')" class="text-red-400 hover:text-red-600">×</button>
+                  </span>
                 `).join('')}
               </div>
             </div>
 
-            <!-- Добавить СВОЙ товар в магазин -->
+            <!-- Добавить товар -->
             <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-2xl text-xs space-y-2">
-              <span class="font-bold text-blue-900 block">Добавить свой товар в магазин:</span>
-              <input id="newProdTitle" placeholder="Название товара" class="w-full p-2 border rounded-xl bg-white" />
-              <div class="flex gap-2">
-                <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="w-1/3 p-2 border rounded-xl bg-white" />
-                <input id="newProdImg" placeholder="Ссылка на фото (URL или из VK)" class="w-2/3 p-2 border rounded-xl bg-white" />
+              <span class="font-bold text-blue-900 block">Добавить новый товар:</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="newProdTitle" placeholder="Название" class="p-2 border rounded-xl bg-white" />
+                <select id="newProdCategory" class="p-2 border rounded-xl bg-white">
+                  ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
               </div>
-              <textarea id="newProdDesc" placeholder="Подробное описание товара" class="w-full p-2 border rounded-xl bg-white h-14"></textarea>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="p-2 border rounded-xl bg-white" />
+                <input id="newProdImg" placeholder="Ссылка на фото" class="p-2 border rounded-xl bg-white" />
+              </div>
+              <input id="newProdColors" placeholder="Цвета через запятую (напр. Черный, Синий)" class="w-full p-2 border rounded-xl bg-white" />
+              <textarea id="newProdDesc" placeholder="Подробное описание" class="w-full p-2 border rounded-xl bg-white h-12"></textarea>
               <button onclick="addProduct()" class="w-full bg-blue-600 text-white rounded-xl font-bold py-2 shadow-sm">Добавить товар в каталог</button>
             </div>
 
-            <!-- Список всех товаров тренера -->
+            <!-- Список всех товаров с редактированием -->
             <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Товары в каталоге (${state.data.products.length} шт):</span>
-              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все товары (${state.data.products.length} шт):</span>
+              <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
                 ${state.data.products.map(p => `
                   <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
-                    <span class="font-semibold truncate max-w-[200px]">${p.title} (${p.price} ₽)</span>
-                    <button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                    <div class="truncate pr-2">
+                      <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">${p.category || 'Плавание'}</span>
+                      <span class="font-semibold text-slate-800 ml-1">${p.title} (${p.price} ₽)</span>
+                    </div>
+                    <div class="flex gap-1 flex-shrink-0">
+                      <button onclick="openEditProductModal(${p.id})" class="w-7 h-7 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg flex items-center justify-center" title="Редактировать товар">
+                        <i class="fa-solid fa-pen text-[10px]"></i>
+                      </button>
+                      <button onclick="deleteProduct(${p.id})" class="w-7 h-7 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg flex items-center justify-center" title="Удалить товар">
+                        <i class="fa-regular fa-trash-can text-[10px]"></i>
+                      </button>
+                    </div>
                   </div>
                 `).join('')}
               </div>
@@ -678,7 +805,7 @@
       const bal = parseInt(document.getElementById('newClientBal').value) || 0;
       if (!name || !code) return alert("Заполните имя и код");
 
-      state.data.clients.push({ id: code, name: name, phone: code, balance: bal });
+      state.data.clients.push({ id: code, name: name, phone: code, balance: bal, videos: [], avatar: "" });
       saveData(state.data);
       render();
     }
@@ -710,31 +837,46 @@
       render();
     }
 
-    function deleteSlot(slotId) {
-      if (!confirm("Удалить окно?")) return;
-      state.data.slots = state.data.slots.filter(s => s.id !== slotId);
+    function addCategory() {
+      const name = document.getElementById('newCategoryInput').value.trim();
+      if (!name) return;
+      state.data.categories = state.data.categories || defaultCategories;
+      if (!state.data.categories.includes(name)) {
+        state.data.categories.push(name);
+        saveData(state.data);
+        render();
+      }
+    }
+
+    function deleteCategory(cat) {
+      if (!confirm(`Удалить раздел "${cat}"?`)) return;
+      state.data.categories = (state.data.categories || defaultCategories).filter(c => c !== cat);
       saveData(state.data);
       render();
     }
 
     function addProduct() {
       const title = document.getElementById('newProdTitle').value.trim();
+      const cat = document.getElementById('newProdCategory').value;
       const price = parseInt(document.getElementById('newProdPrice').value) || 0;
       const img = document.getElementById('newProdImg').value.trim() || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
+      const colorsVal = document.getElementById('newProdColors').value.trim();
       const desc = document.getElementById('newProdDesc').value.trim();
 
       if (!title || !price) return alert("Укажите название и цену товара!");
 
       state.data.products.unshift({
         id: Date.now(),
+        category: cat,
         title: title,
         price: price,
         desc: desc || "Качественная экипировка для плавания.",
-        image: img
+        image: img,
+        colors: colorsVal ? colorsVal.split(',').map(c => c.trim()).filter(Boolean) : []
       });
       saveData(state.data);
       render();
-      alert("Товар успешно добавлен в каталог магазина!");
+      alert("Товар добавлен!");
     }
 
     function deleteProduct(prodId) {
@@ -744,7 +886,7 @@
       render();
     }
 
-    // Запуск приложения
+    // Первый запуск
     render();
   </script>
 </body>
