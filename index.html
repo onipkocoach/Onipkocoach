@@ -44,13 +44,12 @@
 
     <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main class="p-5 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Сюда динамически рендерится экран (Вход клиента, Личный кабинет клиента или Панель тренера) -->
+      <!-- Сюда динамически рендерится экран -->
     </main>
 
   </div>
 
   <script>
-    // --- НАЧАЛЬНЫЕ ДАННЫЕ (сохраняются в памяти браузера) ---
     const ADMIN_PIN = "1234"; // Пароль тренера для входа
 
     const defaultData = {
@@ -78,11 +77,10 @@
 
     let state = {
       data: loadData(),
-      currentView: 'client_login', // 'client_login' | 'client_cabinet' | 'admin'
+      currentView: 'client_login',
       currentClientId: null
     };
 
-    // --- РЕНДЕР ИНТЕРФЕЙСА ---
     function render() {
       const main = document.getElementById('appContent');
 
@@ -119,7 +117,6 @@
 
         main.innerHTML = `
           <div>
-            <!-- Приветствие и Баланс -->
             <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
               <div>
                 <p class="text-xs text-slate-400">Ученик</p>
@@ -140,7 +137,6 @@
               </a>
             </div>
 
-            <!-- Мои записи -->
             <div class="mb-5">
               <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ваши активные записи</h3>
               ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100">Пока нет записей. Выберите окно ниже.</p>' : ''}
@@ -154,7 +150,6 @@
               </div>
             </div>
 
-            <!-- Доступные окна для записи -->
             <div>
               <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Свободные окна тренера</h3>
               <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -193,23 +188,27 @@
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border rounded-xl bg-white" />
-                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2">Добавить</button>
+                <button onclick="addClient()" class="w-1/2 bg-blue-600 text-white rounded-xl font-bold py-2 hover:bg-blue-700 transition">Добавить</button>
               </div>
             </div>
 
-            <!-- Список учеников с балансом -->
-            <div class="mb-4">
+            <!-- Список учеников с балансом и удалением -->
+            <div class="mb-5">
               <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Список учеников:</span>
-              <div class="space-y-2 max-h-40 overflow-y-auto">
+              <div class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                ${state.data.clients.length === 0 ? '<p class="text-xs text-slate-400">Учеников пока нет.</p>' : ''}
                 ${state.data.clients.map(c => `
-                  <div class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl text-xs">
+                  <div class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl text-xs shadow-sm">
                     <div>
-                      <p class="font-bold text-slate-800">${c.name} <span class="text-[10px] text-slate-400 font-normal">(Код: ${c.id})</span></p>
-                      <p class="text-blue-600 font-semibold">Баланс: ${c.balance} зан.</p>
+                      <p class="font-bold text-slate-800">${c.name} <span class="text-[10px] text-slate-400 font-normal">(${c.id})</span></p>
+                      <p class="text-blue-600 font-semibold mt-0.5">Баланс: ${c.balance} зан.</p>
                     </div>
-                    <div class="flex gap-1">
-                      <button onclick="updateBalance('${c.id}', 1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-blue-100 font-bold">+</button>
-                      <button onclick="updateBalance('${c.id}', -1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-red-100 font-bold">-</button>
+                    <div class="flex items-center gap-1.5">
+                      <button onclick="updateBalance('${c.id}', 1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-blue-100 font-bold" title="Прибавить занятие">+</button>
+                      <button onclick="updateBalance('${c.id}', -1)" class="w-7 h-7 bg-slate-100 rounded-lg hover:bg-red-100 font-bold" title="Списать занятие">-</button>
+                      <button onclick="deleteClient('${c.id}')" class="w-7 h-7 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg ml-1" title="Удалить ученика">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                      </button>
                     </div>
                   </div>
                 `).join('')}
@@ -217,7 +216,7 @@
             </div>
 
             <!-- Добавить окно расписания -->
-            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2 mb-4">
               <span class="font-bold text-slate-700 block">Добавить окно в график:</span>
               <div class="flex gap-2">
                 <select id="newSlotDay" class="p-2 border rounded-xl bg-white flex-1">
@@ -229,8 +228,29 @@
                   <option>Суббота</option>
                   <option>Воскресенье</option>
                 </select>
-                <input id="newSlotTime" placeholder="10:00" class="w-20 p-2 border rounded-xl bg-white" />
-                <button onclick="addSlot()" class="bg-slate-800 text-white px-3 rounded-xl font-bold">ОК</button>
+                <input id="newSlotTime" placeholder="10:00" class="w-20 p-2 border rounded-xl bg-white text-center" />
+                <button onclick="addSlot()" class="bg-slate-800 text-white px-3 rounded-xl font-bold hover:bg-slate-700 transition">ОК</button>
+              </div>
+            </div>
+
+            <!-- Список всех окон с удалением -->
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Все окна (расписание):</span>
+              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                ${state.data.slots.length === 0 ? '<p class="text-xs text-slate-400">Окон пока нет.</p>' : ''}
+                ${state.data.slots.map(s => {
+                  const client = s.bookedBy ? state.data.clients.find(c => c.id === s.bookedBy) : null;
+                  return `
+                    <div class="flex justify-between items-center bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs">
+                      <div>
+                        <span class="font-semibold text-slate-800">${s.day} ${s.time}</span>${client ? `<span class="ml-2 text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-medium">${client.name}</span>` : '<span class="ml-2 text-slate-400 text-[10px]">Свободно</span>'}
+                      </div>
+                      <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600 p-1" title="Удалить это окно">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
 
@@ -239,7 +259,7 @@
       }
     }
 
-    // --- ЛОГИКА И ДЕЙСТВИЯ ---
+    // --- ЛОГИКА ---
 
     function loginClient() {
       const code = document.getElementById('clientCodeInput').value.trim();
@@ -291,7 +311,7 @@
       const client = state.data.clients.find(c => c.id === state.currentClientId);
       const slot = state.data.slots.find(s => s.id === slotId);
       slot.bookedBy = null;
-      client.balance += 1; // возвращаем занятие при отмене
+      client.balance += 1;
       saveData(state.data);
       render();
     }
@@ -303,6 +323,18 @@
       if (!name || !code) return alert("Заполните ФИО и Код");
 
       state.data.clients.push({ id: code, name: name, phone: code, balance: bal });
+      saveData(state.data);
+      render();
+    }
+
+    function deleteClient(clientId) {
+      if (!confirm("Вы уверены, что хотите удалить этого ученика?")) return;
+      // Освобождаем слоты этого клиента
+      state.data.slots.forEach(s => {
+        if (s.bookedBy === clientId) s.bookedBy = null;
+      });
+      // Удаляем клиента
+      state.data.clients = state.data.clients.filter(c => c.id !== clientId);
       saveData(state.data);
       render();
     }
@@ -327,6 +359,13 @@
         time: time,
         bookedBy: null
       });
+      saveData(state.data);
+      render();
+    }
+
+    function deleteSlot(slotId) {
+      if (!confirm("Удалить это окно из расписания?")) return;
+      state.data.slots = state.data.slots.filter(s => s.id !== slotId);
       saveData(state.data);
       render();
     }
