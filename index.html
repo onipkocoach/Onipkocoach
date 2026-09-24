@@ -14,9 +14,9 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-2 sm:p-6 pb-12">
 
-  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[750px] relative">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col min-h-[720px] relative">
     
-    <!-- Шапка профиля тренера -->
+    <!-- Шапка профиля -->
     <header class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-5 relative">
       <div class="flex justify-between items-start">
         <div>
@@ -53,7 +53,7 @@
 
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Динамический контент -->
+      <!-- Контент -->
     </main>
 
     <!-- Модалка просмотра товара -->
@@ -77,24 +77,12 @@
       </div>
     </div>
 
-    <!-- Модалка добавления видео ученику тренером -->
-    <div id="videoModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-md rounded-3xl p-5 relative max-h-[90vh] overflow-y-auto">
-        <button onclick="closeVideoModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <h3 class="text-base font-bold text-slate-800 mb-1">Видео с тренировок</h3>
-        <p id="videoModalClientName" class="text-xs text-blue-600 font-semibold mb-3"></p>
-        <div id="videoModalContent" class="space-y-3 text-xs"></div>
-      </div>
-    </div>
-
   </div>
 
   <script>
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
-    const STORAGE_KEY = "kirill_swimming_v5";
+    const STORAGE_KEY = "kirill_swimming_v6";
 
     const defaultCategories = ["Очки", "Шапочки", "Инвентарь"];
 
@@ -104,7 +92,7 @@
         category: "Очки",
         title: "Mad Wave Alien",
         price: 3490,
-        desc: "Стартово-тренировочные очки с инновационной гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу. 4 сменные переносицы.",
+        desc: "Стартово-тренировочные очки с гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу. 4 сменные переносицы.",
         image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
         colors: ["Серый / Желтый", "Черный / Дымчатый", "Белый / Прозрачный"]
       },
@@ -113,7 +101,7 @@
         category: "Очки",
         title: "Mad Wave Alien Rainbow",
         price: 3990,
-        desc: "Стартовая версия со специальным радужным зеркальным напылением Rainbow. Защита от бликов, UV 400 и Antifog.",
+        desc: "Стартовая версия с зеркальным напылением Rainbow. Защита от бликов, UV 400 и Antifog.",
         image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
         colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
       },
@@ -122,7 +110,7 @@
         category: "Очки",
         title: "Mad Wave Aqua Fusion",
         price: 2890,
-        desc: "Панорамные очки для интенсивных заплывов. Обзор свыше 180° без оптических искажений. Монолитная сверхмягкая оправа.",
+        desc: "Панорамные очки для плавания. Обзор свыше 180° без оптических искажений. Монолитная сверхмягкая оправа.",
         image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
         colors: ["Прозрачный / Синий", "Дымчатый / Черный"]
       },
@@ -131,7 +119,7 @@
         category: "Очки",
         title: "Mad Wave Record Breaker Mirror",
         price: 2890,
-        desc: "Стартовая модель с зеркальным напылением линз. Одобрено World Aquatics (FINA). Жесткая посадка со старта.",
+        desc: "Стартовая модель с зеркальным напылением. Одобрено FINA / World Aquatics.",
         image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
         colors: ["Серебро / Черный", "Золото / Синий"]
       },
@@ -140,7 +128,7 @@
         category: "Очки",
         title: "Mad Wave Turbo Racer II",
         price: 1490,
-        desc: "Классические стартовые стекляшки-шведки без уплотнителя. Максимальная гидродинамика.",
+        desc: "Классические стартовые жесткие шведки без уплотнителя. Максимальная гидродинамика.",
         image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
         colors: ["Прозрачный", "Дымчатый", "Синий"]
       }
@@ -174,7 +162,8 @@
       currentClientId: null,
       selectedCategory: 'Все',
       selectedColors: {},
-      videoTargetClientId: null
+      tempNewProdImage: '',
+      tempEditProdImage: ''
     };
 
     function switchTab(tab) {
@@ -197,13 +186,12 @@
       render();
     }
 
-    // --- МОДАЛКА ПРОСМОТРА ТОВАРА ---
+    // --- МОДАЛКА ТОВАРА ---
     function openProductModal(productId) {
       const product = state.data.products.find(p => p.id === productId);
       if (!product) return;
 
       const activeColor = state.selectedColors[product.id] || (product.colors ? product.colors[0] : null);
-
       const modalContent = document.getElementById('modalContent');
       modalContent.innerHTML = `
         <div class="text-center pt-2">
@@ -272,6 +260,7 @@
       const p = state.data.products.find(item => item.id === productId);
       if (!p) return;
 
+      state.tempEditProdImage = p.image;
       const cats = state.data.categories || defaultCategories;
       const form = document.getElementById('editProductForm');
       form.innerHTML = `
@@ -292,8 +281,15 @@
           </div>
         </div>
         <div>
-          <label class="font-bold text-slate-600 block mb-1">Ссылка на фото:</label>
-          <input id="editImage" value="${p.image}" class="w-full p-2 border rounded-xl bg-slate-50" />
+          <label class="font-bold text-slate-600 block mb-1">Фото товара (из фотоплёнки или ссылка):</label>
+          <div class="flex gap-2 items-center mb-1">
+            <label class="bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-100 flex items-center gap-1 text-[11px]">
+              <i class="fa-regular fa-image"></i> Выбрать из фотоплёнки
+              <input type="file" accept="image/*" class="hidden" onchange="handleEditProductFile(event)" />
+            </label>
+            <span id="editFileStatus" class="text-[10px] text-emerald-600 font-semibold"></span>
+          </div>
+          <input id="editImage" value="${p.image}" placeholder="или вставьте ссылку" class="w-full p-2 border rounded-xl bg-slate-50" />
         </div>
         <div>
           <label class="font-bold text-slate-600 block mb-1">Цвета (через запятую):</label>
@@ -301,7 +297,7 @@
         </div>
         <div>
           <label class="font-bold text-slate-600 block mb-1">Описание:</label>
-          <textarea id="editDesc" class="w-full p-2 border rounded-xl bg-slate-50 h-20">${p.desc || ''}</textarea>
+          <textarea id="editDesc" class="w-full p-2 border rounded-xl bg-slate-50 h-16">${p.desc || ''}</textarea>
         </div>
         <button onclick="saveProductChanges(${p.id})" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-blue-700 transition">
           Сохранить изменения
@@ -311,6 +307,18 @@
       document.getElementById('editProductModal').classList.remove('hidden');
     }
 
+    function handleEditProductFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.tempEditProdImage = evt.target.result;
+        document.getElementById('editImage').value = evt.target.result;
+        document.getElementById('editFileStatus').textContent = "Фото выбрано!";
+      };
+      reader.readAsDataURL(file);
+    }
+
     function saveProductChanges(productId) {
       const p = state.data.products.find(item => item.id === productId);
       if (!p) return;
@@ -318,7 +326,7 @@
       p.title = document.getElementById('editTitle').value.trim();
       p.category = document.getElementById('editCategory').value;
       p.price = parseInt(document.getElementById('editPrice').value) || 0;
-      p.image = document.getElementById('editImage').value.trim();
+      p.image = document.getElementById('editImage').value.trim() || state.tempEditProdImage;
       p.desc = document.getElementById('editDesc').value.trim();
 
       const colorsVal = document.getElementById('editColors').value.trim();
@@ -327,88 +335,42 @@
       saveData(state.data);
       closeEditProductModal();
       render();
-      alert("Товар успешно обновлен!");
+      alert("Товар обновлен!");
     }
 
     function closeEditProductModal() {
       document.getElementById('editProductModal').classList.add('hidden');
     }
 
-    // --- УПРАВЛЕНИЕ ВИДЕО ТРЕНИРОВОК ---
-    function openVideoModal(clientId) {
-      state.videoTargetClientId = clientId;
-      const client = state.data.clients.find(c => c.id === clientId);
-      if (!client) return;
+    // --- ОБНОВЛЕНИЕ АВАТАРКИ КЛИЕНТА ИЗ ГАЛЕРЕИ ---
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-      document.getElementById('videoModalClientName').textContent = `Ученик: ${client.name} (Код: ${client.id})`;
-      renderVideoModalContent(client);
-      document.getElementById('videoModal').classList.remove('hidden');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const client = state.data.clients.find(c => c.id === state.currentClientId);
+        if (client) {
+          client.avatar = e.target.result;
+          saveData(state.data);
+          render();
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
-    function renderVideoModalContent(client) {
-      client.videos = client.videos || [];
-      const content = document.getElementById('videoModalContent');
-      content.innerHTML = `
-        <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-2">
-          <span class="font-bold text-slate-700 block">Добавить видео для этого ученика:</span>
-          <input id="newVideoTitle" placeholder="Тема (напр. Разбор гребка кролем)" class="w-full p-2 border rounded-xl bg-white" />
-          <input id="newVideoUrl" placeholder="Ссылка на видео (VK / YouTube / Rutube / прямая mp4)" class="w-full p-2 border rounded-xl bg-white" />
-          <button onclick="addClientVideo('${client.id}')" class="w-full bg-blue-600 text-white font-bold py-2 rounded-xl">Загрузить видео</button>
-        </div>
+    // --- ОБРАБОТКА ФОТО НОВОГО ТОВАРА ---
+    function handleNewProductFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-        <div>
-          <span class="font-bold text-slate-500 uppercase text-[10px] block mb-2">Загруженные видео (${client.videos.length}):</span>
-          <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-            ${client.videos.length === 0 ? '<p class="text-slate-400">Видео пока не загружены.</p>' : ''}
-            ${client.videos.map((v, idx) => `
-              <div class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl">
-                <div class="truncate pr-2">
-                  <p class="font-bold text-slate-800 truncate">${v.title}</p>
-                  <a href="${v.url}" target="_blank" class="text-blue-500 text-[10px] truncate block">${v.url}</a>
-                </div>
-                <button onclick="deleteClientVideo('${client.id}',${idx})" class="text-red-400 hover:text-red-600 p-1">
-                  <i class="fa-regular fa-trash-can"></i>
-                </button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    function addClientVideo(clientId) {
-      const title = document.getElementById('newVideoTitle').value.trim();
-      const url = document.getElementById('newVideoUrl').value.trim();
-      if (!title || !url) return alert("Введите тему и ссылку на видео");
-
-      const client = state.data.clients.find(c => c.id === clientId);
-      client.videos = client.videos || [];
-      client.videos.unshift({ title, url, date: new Date().toLocaleDateString('ru-RU') });
-      saveData(state.data);
-      renderVideoModalContent(client);
-    }
-
-    function deleteClientVideo(clientId, index) {
-      if (!confirm("Удалить это видео?")) return;
-      const client = state.data.clients.find(c => c.id === clientId);
-      client.videos.splice(index, 1);
-      saveData(state.data);
-      renderVideoModalContent(client);
-    }
-
-    function closeVideoModal() {
-      document.getElementById('videoModal').classList.add('hidden');
-    }
-
-    // --- ОБНОВЛЕНИЕ АВАТАРКИ КЛИЕНТОМ ---
-    function changeAvatar() {
-      const client = state.data.clients.find(c => c.id === state.currentClientId);
-      const url = prompt("Вставьте прямую ссылку на ваше фото (из VK или интернета):", client.avatar || "");
-      if (url !== null) {
-        client.avatar = url.trim();
-        saveData(state.data);
-        render();
-      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        state.tempNewProdImage = e.target.result;
+        document.getElementById('newProdImg').value = e.target.result;
+        document.getElementById('newProdFileStatus').textContent = "Фото выбрано!";
+      };
+      reader.readAsDataURL(file);
     }
 
     // --- РЕНДЕР ИНТЕРФЕЙСА ---
@@ -447,7 +409,7 @@
         return;
       }
 
-      // 2. ВИТРИНА МАГАЗИНА С КАТЕГОРИЯМИ И ФИЛЬТРАМИ
+      // 2. ВИТРИНА МАГАЗИНА
       if (state.currentTab === 'shop' && state.currentView !== 'admin') {
         const categories = ["Все", ...(state.data.categories || defaultCategories)];
         const filteredProducts = state.selectedCategory === "Все" 
@@ -522,25 +484,28 @@
         return;
       }
 
-      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА (С АВАТАРКОЙ И ВИДЕО)
+      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА (С АВАТАРКОЙ ИЗ ГАЛЕРЕИ)
       if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
         const client = state.data.clients.find(c => c.id === state.currentClientId);
         const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
         const freeSlots = state.data.slots.filter(s => !s.bookedBy);
-        const videos = client.videos || [];
 
         main.innerHTML = `
           <div class="space-y-4">
-            <!-- Шапка профиля ученика с аватаркой -->
+            <!-- Шапка профиля ученика с аватаркой из фотоплёнки -->
             <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
               <div class="flex items-center gap-3">
-                <div class="relative cursor-pointer" onclick="changeAvatar()" title="Нажмите, чтобы сменить фото">
-                  <img src="${client.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Фото'">
-                  <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white">✏️</span>
-                </div>
+                <label class="relative cursor-pointer" title="Нажмите, чтобы загрузить фото из галереи">
+                  <img src="${client.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-13 h-13 w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Фото'">
+                  <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white">📷</span>
+                  <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                </label>
                 <div>
                   <h2 class="text-sm font-bold text-slate-800 leading-tight">${client.name}</h2>
-                  <p class="text-[10px] text-slate-400 mt-0.5">ID: ${client.id} • <span onclick="changeAvatar()" class="text-blue-500 hover:underline cursor-pointer">Сменить фото</span></p>
+                  <label class="text-[10px] text-blue-600 hover:underline cursor-pointer block mt-0.5">
+                    Загрузить фото с телефона
+                    <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                  </label>
                 </div>
               </div>
               <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500 font-medium">
@@ -559,35 +524,10 @@
               </a>
             </div>
 
-            <!-- Блок персональных видео с тренировок -->
-            <div>
-              <div class="flex justify-between items-center mb-1.5">
-                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <i class="fa-solid fa-video text-blue-500 mr-1"></i> Видео с ваших тренировок (${videos.length})
-                </h3>
-              </div>
-              ${videos.length === 0 
-                ? '<div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl text-xs text-slate-400 text-center">Тренер пока не прикрепил видео. Они появятся здесь после тренировки.</div>'
-                : `<div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    ${videos.map(v => `
-                      <div class="bg-slate-900 text-white p-3 rounded-2xl flex flex-col gap-2">
-                        <div class="flex justify-between items-center text-xs">
-                          <span class="font-bold truncate pr-2">${v.title}</span>
-                          <span class="text-[10px] text-slate-400">${v.date || ''}</span>
-                        </div>
-                        <a href="${v.url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-center text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5">
-                          <i class="fa-solid fa-play text-xs"></i> Смотреть видео
-                        </a>
-                      </div>
-                    `).join('')}
-                  </div>`
-              }
-            </div>
-
             <!-- Активные записи -->
             <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Ваши активные записи</h3>
-              ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Пока нет записей. Выберите окно ниже.</p>' : ''}
+              ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Пока нет записей. Выберите свободное время ниже.</p>' : ''}
               <div class="space-y-1.5">
                 ${mySlots.map(s => `
                   <div class="flex justify-between items-center bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl text-xs">
@@ -598,10 +538,10 @@
               </div>
             </div>
 
-            <!-- Окна для записи -->
+            <!-- Свободные окна тренера -->
             <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Свободные окна тренера</h3>
-              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 ${freeSlots.length === 0 ? '<p class="text-xs text-slate-400">Свободных окон пока нет.</p>' : ''}
                 ${freeSlots.map(s => `
                   <div class="flex justify-between items-center bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs hover:border-blue-200 transition">
@@ -643,7 +583,7 @@
               </div>
             </div>
 
-            <!-- Список учеников с кнопкой видео -->
+            <!-- Список учеников -->
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Ученики (${state.data.clients.length} чел):</span>
               <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
@@ -652,12 +592,9 @@
                   <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
                     <div class="truncate pr-1">
                       <p class="font-bold text-slate-800 truncate">${c.name} <span class="text-[10px] text-slate-400">(${c.id})</span></p>
-                      <p class="text-blue-600 font-semibold">${c.balance} зан. • <span class="text-slate-500">${(c.videos || []).length} видео</span></p>
+                      <p class="text-blue-600 font-semibold">${c.balance} зан.</p>
                     </div>
                     <div class="flex items-center gap-1 flex-shrink-0">
-                      <button onclick="openVideoModal('${c.id}')" class="px-2 py-1 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-md font-bold text-[10px]" title="Добавить видео">
-                        🎬 Видео
-                      </button>
                       <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">+</button>
                       <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold">-</button>
                       <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-50 text-red-500 rounded-md"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
@@ -679,7 +616,20 @@
               </div>
             </div>
 
-            <!-- Управление категориями магазина -->
+            <!-- Список окон -->
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все окна расписания:</span>
+              <div class="space-y-1 max-h-28 overflow-y-auto pr-1">
+                ${state.data.slots.map(s => `
+                  <div class="flex justify-between items-center bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs">
+                    <span>${s.day} ${s.time}${s.bookedBy ? '<b class="text-blue-600">(Занято)</b>' : ''}</span>
+                    <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Управление категориями -->
             <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Разделы (категории) магазина:</span>
               <div class="flex gap-2">
@@ -696,7 +646,7 @@
               </div>
             </div>
 
-            <!-- Добавить товар -->
+            <!-- Добавить товар с выбором фото из фотоплёнки -->
             <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-blue-900 block">Добавить новый товар:</span>
               <div class="grid grid-cols-2 gap-2">
@@ -707,14 +657,21 @@
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="p-2 border rounded-xl bg-white" />
-                <input id="newProdImg" placeholder="Ссылка на фото" class="p-2 border rounded-xl bg-white" />
+                <label class="bg-white text-blue-600 font-bold p-2 rounded-xl border border-blue-200 cursor-pointer flex items-center justify-center gap-1 text-center truncate">
+                  <i class="fa-regular fa-image"></i> Из фотоплёнки
+                  <input type="file" accept="image/*" class="hidden" onchange="handleNewProductFile(event)" />
+                </label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input id="newProdImg" placeholder="или ссылка на фото" class="flex-1 p-2 border rounded-xl bg-white text-[11px]" />
+                <span id="newProdFileStatus" class="text-[10px] text-emerald-600 font-semibold whitespace-nowrap"></span>
               </div>
               <input id="newProdColors" placeholder="Цвета через запятую (напр. Черный, Синий)" class="w-full p-2 border rounded-xl bg-white" />
               <textarea id="newProdDesc" placeholder="Подробное описание" class="w-full p-2 border rounded-xl bg-white h-12"></textarea>
               <button onclick="addProduct()" class="w-full bg-blue-600 text-white rounded-xl font-bold py-2 shadow-sm">Добавить товар в каталог</button>
             </div>
 
-            <!-- Список всех товаров с редактированием -->
+            <!-- Список товаров с редактированием -->
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все товары (${state.data.products.length} шт):</span>
               <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
@@ -805,7 +762,7 @@
       const bal = parseInt(document.getElementById('newClientBal').value) || 0;
       if (!name || !code) return alert("Заполните имя и код");
 
-      state.data.clients.push({ id: code, name: name, phone: code, balance: bal, videos: [], avatar: "" });
+      state.data.clients.push({ id: code, name: name, phone: code, balance: bal, avatar: "" });
       saveData(state.data);
       render();
     }
@@ -859,7 +816,7 @@
       const title = document.getElementById('newProdTitle').value.trim();
       const cat = document.getElementById('newProdCategory').value;
       const price = parseInt(document.getElementById('newProdPrice').value) || 0;
-      const img = document.getElementById('newProdImg').value.trim() || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
+      const img = document.getElementById('newProdImg').value.trim() || state.tempNewProdImage || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
       const colorsVal = document.getElementById('newProdColors').value.trim();
       const desc = document.getElementById('newProdDesc').value.trim();
 
@@ -874,6 +831,7 @@
         image: img,
         colors: colorsVal ? colorsVal.split(',').map(c => c.trim()).filter(Boolean) : []
       });
+      state.tempNewProdImage = '';
       saveData(state.data);
       render();
       alert("Товар добавлен!");
@@ -886,7 +844,7 @@
       render();
     }
 
-    // Первый запуск
+    // Запуск
     render();
   </script>
 </body>
