@@ -39,7 +39,7 @@
       </div>
     </header>
 
-    <!-- Навигационные вкладки для ученика -->
+    <!-- Навигационные вкладки -->
     <nav id="clientTabs" class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500">
       <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-calendar-check"></i> Запись и профиль
@@ -49,21 +49,19 @@
       </button>
     </nav>
 
-    <!-- Основной контейнер экрана -->
+    <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Динамический контент -->
+      <!-- Контент -->
     </main>
 
-    <!-- Модальное окно просмотра товара -->
+    <!-- Всплывающая карточка подробного описания товара -->
     <div id="productModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 relative animate-in slide-in-from-bottom duration-200">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 relative">
         <button onclick="closeProductModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
 
-        <div id="modalContent">
-          <!-- Контент модалки -->
-        </div>
+        <div id="modalContent"></div>
       </div>
     </div>
 
@@ -72,206 +70,208 @@
   <script>
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
+    const STORAGE_KEY = "kirill_coach_storage";
 
-    const defaultData = {
-      clients: [
-        { id: "1001", name: "Алексей Иванов", phone: "1001", balance: 6 },
-        { id: "1002", name: "Мария Смирнова", phone: "1002", balance: 2 }
-      ],
-      slots: [
-        { id: 1, day: "Вторник", time: "09:00", bookedBy: null },
-        { id: 2, day: "Вторник", time: "15:00", bookedBy: "1001" },
-        { id: 3, day: "Четверг", time: "09:00", bookedBy: null },
-        { id: 4, day: "Четверг", time: "15:00", bookedBy: null },
-        { id: 5, day: "Суббота", time: "14:00", bookedBy: "1002" }
-      ],
-      products: [
-        {
-          id: 101,
-          title: "Mad Wave Alien",
-          price: 3490,
-          desc: "Стартово-тренировочные очки с инновационной гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу, не пропуская воду и не оставляя следов вокруг глаз. Оснащены сменными носовыми перемычками и двойным силиконовым ремешком.",
-          image: "https://madwave.ru/images/catalog/training-goggles/alien-1/1.jpg",
-          colors: ["Серый / Желтый", "Черный / Дымчатый", "Белый / Прозрачный"]
-        },
-        {
-          id: 102,
-          title: "Mad Wave Alien Rainbow",
-          price: 3990,
-          desc: "Флагманская версия очков Alien со специальным многослойным радужным зеркальным напылением Rainbow. Идеально защищают от бликов солнца на открытой воде и мощных прожекторов в бассейне. Защита UV 400 и покрытие Antifog.",
-          image: "https://madwave.ru/images/catalog/training-goggles/alien-rainbow/1.jpg",
-          colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
-        },
-        {
-          id: 103,
-          title: "Mad Wave Aqua Fusion",
-          price: 2890,
-          desc: "Панорамные очки для интенсивных тренировок. Широкий угол обзора свыше 180° без оптических искажений. Монолитная сверхмягкая оправа из гипоаллергенного силикона снижает давление на глазницы.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/aqua-fusion/1.jpg",
-          colors: ["Прозрачный / Синий", "Дымчатый / Черный", "Прозрачный"]
-        },
-        {
-          id: 104,
-          title: "Mad Wave Aqua Fusion Mirror",
-          price: 3290,
-          desc: "Зеркальная модификация очков Aqua Fusion с антибликовым фильтром. Сочетает комфорт тренировочной маски с гидродинамикой соревновательных очков.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/aqua-fusion-mirror/1.jpg",
-          colors: ["Зеркальный Синий", "Зеркальный Серебряный", "Черный хром"]
-        },
-        {
-          id: 105,
-          title: "Mad Wave Aqua Fusion Nano",
-          price: 3190,
-          desc: "Облегченная уменьшенная посадка (Nano) для подростков, девушек и пловцов с узким типом лица. Повторяет анатомические контуры лица для 100% герметичности.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/aqua-fusion-nano/1.jpg",
-          colors: ["Бело-бирюзовый", "Сине-белый", "Прозрачный"]
-        },
-        {
-          id: 106,
-          title: "Mad Wave Aqua Fusion Nano Mirror",
-          price: 3590,
-          desc: "Юниорские зеркальные очки премиум-класса с уменьшенной рамкой и зеркальными отражающими линзами.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/aqua-fusion-nano-mirror/1.jpg",
-          colors: ["Зеркальный Розовый", "Зеркальный Синий", "Зеркальный Серебро"]
-        },
-        {
-          id: 107,
-          title: "Mad Wave Forward Mirror",
-          price: 3390,
-          desc: "Профессиональные стартовые очки с ультранизким профилем. Форма линз спроектирована для контроля соперников по дорожкам без лишних поворотов головы.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/forward-mirror-1/1.jpg",
-          colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
-        },
-        {
-          id: 108,
-          title: "Mad Wave Record Breaker",
-          price: 2390,
-          desc: "Классические стартовые гидродинамические очки со сменными переносицами (4 размера). Тонкий низкопрофильный уплотнитель гарантирует жесткую фиксацию при нырке со старта.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker/1.jpg",
-          colors: ["Прозрачный", "Дымчатый", "Синий", "Черный"]
-        },
-        {
-          id: 109,
-          title: "Mad Wave Record Breaker Mirror",
-          price: 2890,
-          desc: "Стартовая модель Record Breaker с металлизированным зеркальным напылением линз. Одобрено World Aquatics (FINA).",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker-mirror/1.jpg",
-          colors: ["Серебро / Черный", "Золото / Синий", "Хром / Белый"]
-        },
-        {
-          id: 110,
-          title: "Mad Wave Record Breaker Rainbow",
-          price: 3190,
-          desc: "Стартовые очки с переливающимися радужными линзами Rainbow. Снижают утомляемость глаз при ярком свете соревновательного бассейна.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker-rainbow/1.jpg",
-          colors: ["Радужный / Черный", "Радужный / Салатовый", "Радужный / Белый"]
-        },
-        {
-          id: 111,
-          title: "Mad Wave Record Breaker Nano",
-          price: 2590,
-          desc: "Уменьшенная модель стартовых очков Record Breaker для юниоров и спортсменов с небольшим овалом лица.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker-nano/1.jpg",
-          colors: ["Прозрачно-розовый", "Голубой", "Дымчатый"]
-        },
-        {
-          id: 112,
-          title: "Mad Wave Record Breaker Nano Mirror",
-          price: 2990,
-          desc: "Зеркальная уменьшенная модификация Record Breaker для юниорских стартов.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker-nano-mirror/1.jpg",
-          colors: ["Зеркальный Бирюзовый", "Зеркальный Розовый", "Зеркальный Черный"]
-        },
-        {
-          id: 113,
-          title: "Mad Wave Record Breaker Nano Rainbow",
-          price: 3290,
-          desc: "Компактная Nano-серия с радужным градиентным напылением.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/record-breaker-nano-rainbow/1.jpg",
-          colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Розовый"]
-        },
-        {
-          id: 114,
-          title: "Mad Wave Streamline Mirror",
-          price: 3490,
-          desc: "Соревновательные очки с обтекаемой формой Streamline для минимального сопротивления воды. Одобрено World Aquatics (FINA). В комплекте сменные переносицы.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/streamline-mirror/1.jpg",
-          colors: ["Зеркальный Хром", "Зеркальный Золотой", "Зеркальный Синий"]
-        },
-        {
-          id: 115,
-          title: "Mad Wave Streamline Rainbow",
-          price: 3890,
-          desc: "Соревновательные очки Streamline с зеркальным покрытием Rainbow и защитой от ультрафиолета.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/streamline-rainbow/1.jpg",
-          colors: ["Радужный / Черный", "Радужный / Синий", "Радужный / Белый"]
-        },
-        {
-          id: 116,
-          title: "Mad Wave Turbo Racer II",
-          price: 1490,
-          desc: "Классические стартовые очки-«шведки» (стекляшки) без силиконового уплотнителя. Обеспечивают максимальное прилегание непосредственно к кости глазницы.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/turbo-racer-ii/1.jpg",
-          colors: ["Прозрачный", "Дымчатый", "Синий", "Красный"]
-        },
-        {
-          id: 117,
-          title: "Mad Wave Turbo Racer II Mirror",
-          price: 1890,
-          desc: "Классические соревновательные шведки Turbo Racer с зеркальными линзами для защиты от бликов.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/turbo-racer-ii-mirror/1.jpg",
-          colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
-        },
-        {
-          id: 118,
-          title: "Mad Wave Turbo Racer II Rainbow",
-          price: 2190,
-          desc: "Шведки Turbo Racer II с ярким радужным зеркальным напылением.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/turbo-racer-ii-rainbow/1.jpg",
-          colors: ["Rainbow Черный", "Rainbow Белый", "Rainbow Синий"]
-        },
-        {
-          id: 119,
-          title: "Mad Wave X-Blade Mirror",
-          price: 3990,
-          desc: "Стартовые очки с агрессивным угловатым профилем и жесткими боковыми дужками для стабильности на старте и поворотах.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/x-blade-mirror/1.jpg",
-          colors: ["Черно-золотой", "Бело-серебряный", "Сине-зеленый"]
-        },
-        {
-          id: 120,
-          title: "Mad Wave X-Look",
-          price: 2990,
-          desc: "Универсальные комфортные очки для ежедневных длительных тренировок. Широкие изогнутые линзы и мягкий уплотнитель.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/x-look/1.jpg",
-          colors: ["Прозрачно-черный", "Сине-белый", "Дымчатый"]
-        },
-        {
-          id: 121,
-          title: "Mad Wave X-Look Mirror",
-          price: 3490,
-          desc: "Зеркальная модификация очков серии X-Look для открытой воды и бассейнов с ярким освещением.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/x-look-mirror/1.jpg",
-          colors: ["Зеркальный Хром", "Зеркальный Синий", "Зеркальный Черный"]
-        },
-        {
-          id: 122,
-          title: "Mad Wave X-Look Rainbow",
-          price: 3790,
-          desc: "Очки X-Look с яркими радужными линзами Rainbow и эргономичным регулятором натяжения ремешка.",
-          image: "https://madwave.ru/images/catalog/racing-goggles/x-look-rainbow/1.jpg",
-          colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Голубой"]
-        }
-      ]
-    };
+    // Базовый стартовый каталог очков Mad Wave
+    const defaultProducts = [
+      {
+        id: 101,
+        title: "Mad Wave Alien",
+        price: 3490,
+        desc: "Стартово-тренировочные очки с гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу, не пропуская воду. В комплекте 4 сменные носовые перемычки и двойной силиконовый ремешок.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Серый / Желтый", "Черный / Дымчатый", "Белый / Прозрачный"]
+      },
+      {
+        id: 102,
+        title: "Mad Wave Alien Rainbow",
+        price: 3990,
+        desc: "Флагманская версия очков Alien со специальным многослойным радужным зеркальным напылением Rainbow. Идеально защищают от ярких прожекторов и солнечных бликов. Защита UV 400 и покрытие Antifog.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
+      },
+      {
+        id: 103,
+        title: "Mad Wave Aqua Fusion",
+        price: 2890,
+        desc: "Панорамные очки для плавания с широким углом обзора свыше 180°. Монолитная сверхмягкая оправа из силикона гарантирует идеальную посадку без сдавливания глазниц.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Прозрачный / Синий", "Дымчатый / Черный", "Прозрачный"]
+      },
+      {
+        id: 104,
+        title: "Mad Wave Aqua Fusion Mirror",
+        price: 3290,
+        desc: "Зеркальная соревновательная модификация очков Aqua Fusion с антибликовым фильтром и панорамным обзором.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Зеркальный Синий", "Зеркальный Серебряный", "Черный хром"]
+      },
+      {
+        id: 105,
+        title: "Mad Wave Aqua Fusion Nano",
+        price: 3190,
+        desc: "Уменьшенная модель (Nano) для детей, подростков и спортсменов с узким типом лица.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Бело-бирюзовый", "Сине-белый", "Прозрачный"]
+      },
+      {
+        id: 106,
+        title: "Mad Wave Aqua Fusion Nano Mirror",
+        price: 3590,
+        desc: "Юниорские зеркальные очки с компактной оправой Nano и зеркальным напылением.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Зеркальный Розовый", "Зеркальный Синий", "Зеркальный Серебро"]
+      },
+      {
+        id: 107,
+        title: "Mad Wave Forward Mirror",
+        price: 3390,
+        desc: "Стартовые низкопрофильные очки для соревнований. Оптимальная гидродинамика и зеркальные линзы.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
+      },
+      {
+        id: 108,
+        title: "Mad Wave Record Breaker",
+        price: 2390,
+        desc: "Классические стартовые гидродинамические очки с тончайшим уплотнителем для надежной фиксации со старта.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Прозрачный", "Дымчатый", "Синий", "Черный"]
+      },
+      {
+        id: 109,
+        title: "Mad Wave Record Breaker Mirror",
+        price: 2890,
+        desc: "Стартовые очки Record Breaker с зеркальными соревновательными линзами. Одобрено FINA / World Aquatics.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Серебро / Черный", "Золото / Синий", "Хром / Белый"]
+      },
+      {
+        id: 110,
+        title: "Mad Wave Record Breaker Rainbow",
+        price: 3190,
+        desc: "Стартовая модель с радужными зеркальными линзами Rainbow и защитой от ультрафиолета.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Радужный / Черный", "Радужный / Салатовый", "Радужный / Белый"]
+      },
+      {
+        id: 111,
+        title: "Mad Wave Record Breaker Nano",
+        price: 2590,
+        desc: "Уменьшенная версия стартовых очков Record Breaker для юниоров.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Прозрачно-розовый", "Голубой", "Дымчатый"]
+      },
+      {
+        id: 112,
+        title: "Mad Wave Record Breaker Nano Mirror",
+        price: 2990,
+        desc: "Зеркальные стартовые очки Nano для юных спортсменов.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Зеркальный Бирюзовый", "Зеркальный Розовый", "Зеркальный Черный"]
+      },
+      {
+        id: 113,
+        title: "Mad Wave Record Breaker Nano Rainbow",
+        price: 3290,
+        desc: "Яркие соревновательные очки с уменьшенной посадкой и радужным зеркальным покрытием.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Розовый"]
+      },
+      {
+        id: 114,
+        title: "Mad Wave Streamline Mirror",
+        price: 3490,
+        desc: "Спортивные очки с обтекаемой формой Streamline для минимального сопротивления воды. Одобрено World Aquatics.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Зеркальный Хром", "Зеркальный Золотой", "Зеркальный Синий"]
+      },
+      {
+        id: 115,
+        title: "Mad Wave Streamline Rainbow",
+        price: 3890,
+        desc: "Флагманская модель Streamline со сверкающими радужными линзами Rainbow.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Радужный / Черный", "Радужный / Синий", "Радужный / Белый"]
+      },
+      {
+        id: 116,
+        title: "Mad Wave Turbo Racer II",
+        price: 1490,
+        desc: "Классические стартовые жесткие шведки без уплотнителя. Точная посадка и максимальная гидродинамика.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Прозрачный", "Дымчатый", "Синий", "Красный"]
+      },
+      {
+        id: 117,
+        title: "Mad Wave Turbo Racer II Mirror",
+        price: 1890,
+        desc: "Соревновательные шведки Turbo Racer II с зеркальным покрытием.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Серебряный / Черный", "Золотой / Белый", "Синий Mirror"]
+      },
+      {
+        id: 118,
+        title: "Mad Wave Turbo Racer II Rainbow",
+        price: 2190,
+        desc: "Шведки Turbo Racer II с радужным отражающим зеркальным фильтром.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Rainbow Черный", "Rainbow Белый", "Rainbow Синий"]
+      },
+      {
+        id: 119,
+        title: "Mad Wave X-Blade Mirror",
+        price: 3990,
+        desc: "Агрессивный соревновательный профиль и жесткие дужки для фиксации на мощном старте.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Черно-золотой", "Бело-серебряный", "Сине-зеленый"]
+      },
+      {
+        id: 120,
+        title: "Mad Wave X-Look",
+        price: 2990,
+        desc: "Очки для длительных тренировок в бассейне. Широкие линзы и мягкий комфортный силикон.",
+        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        colors: ["Прозрачно-черный", "Сине-белый", "Дымчатый"]
+      },
+      {
+        id: 121,
+        title: "Mad Wave X-Look Mirror",
+        price: 3490,
+        desc: "Зеркальная модель X-Look для открытой воды и бассейнов с ярким светом.",
+        image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
+        colors: ["Зеркальный Хром", "Зеркальный Синий", "Зеркальный Черный"]
+      },
+      {
+        id: 122,
+        title: "Mad Wave X-Look Rainbow",
+        price: 3790,
+        desc: "Тренировочные очки X-Look с яркими радужными линзами Rainbow.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+        colors: ["Rainbow Белый", "Rainbow Черный", "Rainbow Голубой"]
+      }
+    ];
 
     function loadData() {
-      const data = localStorage.getItem("swimming_app_data_v4");
-      return data ? JSON.parse(data) : defaultData;
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        return JSON.parse(data);
+      }
+      return {
+        clients: [],
+        slots: [
+          { id: 1, day: "Вторник", time: "09:00", bookedBy: null },
+          { id: 2, day: "Вторник", time: "15:00", bookedBy: null },
+          { id: 3, day: "Четверг", time: "09:00", bookedBy: null },
+          { id: 4, day: "Четверг", time: "15:00", bookedBy: null },
+          { id: 5, day: "Суббота", time: "14:00", bookedBy: null }
+        ],
+        products: defaultProducts
+      };
     }
 
     function saveData(data) {
-      localStorage.setItem("swimming_app_data_v4", JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
     let state = {
@@ -297,12 +297,6 @@
       render();
     }
 
-    function selectColor(productId, color, e) {
-      if (e) e.stopPropagation();
-      state.selectedColors[productId] = color;
-      render();
-    }
-
     function openProductModal(productId) {
       const product = state.data.products.find(p => p.id === productId);
       if (!product) return;
@@ -312,8 +306,8 @@
       const modalContent = document.getElementById('modalContent');
       modalContent.innerHTML = `
         <div class="text-center pt-2">
-          <div class="w-full h-56 bg-slate-50 rounded-2xl flex items-center justify-center p-3 mb-4 border border-slate-100">
-            <img src="${product.image}" alt="${product.title}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/300x200?text=Очки+MadWave'">
+          <div class="w-full h-56 bg-slate-50 rounded-2xl flex items-center justify-center p-3 mb-4 border border-slate-100 overflow-hidden">
+            <img src="${product.image}" alt="${product.title}" class="max-h-full max-w-full object-cover rounded-xl" onerror="this.src='https://placehold.co/400x300?text=Очки+MadWave'">
           </div>
           
           <h2 class="text-xl font-black text-slate-800 text-left leading-tight">${product.title}</h2>
@@ -354,6 +348,12 @@
 
     function closeProductModal() {
       document.getElementById('productModal').classList.add('hidden');
+    }
+
+    function selectColor(productId, color, e) {
+      if (e) e.stopPropagation();
+      state.selectedColors[productId] = color;
+      render();
     }
 
     function orderProduct(productId) {
@@ -398,14 +398,14 @@
         return;
       }
 
-      // 2. ВИТРИНА МАГАЗИНА ОЧКОВ
+      // 2. ВИТРИНА МАГАЗИНА
       if (state.currentTab === 'shop' && state.currentView !== 'admin') {
         main.innerHTML = `
           <div>
             <div class="flex justify-between items-center mb-3">
               <div>
                 <h2 class="text-base font-bold text-slate-800">Очки Mad Wave</h2>
-                <p class="text-[11px] text-slate-400">Нажмите на карточку, чтобы посмотреть подробности</p>
+                <p class="text-[11px] text-slate-400">Нажмите на карточку для описания и фото</p>
               </div>
               <a href="https://vk.ru/club239758541" target="_blank" class="text-xs text-blue-600 font-semibold hover:underline">
                 Все в VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
@@ -418,8 +418,8 @@
                 return `
                   <div onclick="openProductModal(${p.id})" class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-blue-300 transition cursor-pointer">
                     <div class="flex gap-3 items-center">
-                      <div class="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 border border-slate-100">
-                        <img src="${p.image}" alt="${p.title}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/100x100?text=Очки+MadWave'">
+                      <div class="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 border border-slate-100 overflow-hidden">
+                        <img src="${p.image}" alt="${p.title}" class="h-full w-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100?text=Очки'">
                       </div>
                       <div class="flex flex-col justify-between flex-1 min-w-0">
                         <div>
@@ -531,7 +531,7 @@
               <span class="font-bold text-slate-700 block">Добавить нового ученика:</span>
               <div class="grid grid-cols-2 gap-2">
                 <input id="newClientName" placeholder="ФИО ученика" class="p-2 border rounded-xl bg-white" />
-                <input id="newClientCode" placeholder="Код (напр. 1003)" class="p-2 border rounded-xl bg-white" />
+                <input id="newClientCode" placeholder="Код входа (напр. 1001)" class="p-2 border rounded-xl bg-white" />
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border rounded-xl bg-white" />
@@ -541,8 +541,9 @@
 
             <!-- Список учеников -->
             <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Ученики:</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Ученики (${state.data.clients.length} чел):</span>
               <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                ${state.data.clients.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2 rounded-xl">Учеников пока нет. Добавьте первого выше.</p>' : ''}
                 ${state.data.clients.map(c => `
                   <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
                     <div>
@@ -559,7 +560,7 @@
               </div>
             </div>
 
-            <!-- Добавить окно -->
+            <!-- Добавить окно расписания -->
             <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Добавить окно в график:</span>
               <div class="flex gap-2">
@@ -584,7 +585,19 @@
               </div>
             </div>
 
-            <!-- Список товаров -->
+            <!-- Добавить СВОЙ товар в магазин -->
+            <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-2xl text-xs space-y-2">
+              <span class="font-bold text-blue-900 block">Добавить свой товар в магазин:</span>
+              <input id="newProdTitle" placeholder="Название товара" class="w-full p-2 border rounded-xl bg-white" />
+              <div class="flex gap-2">
+                <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="w-1/3 p-2 border rounded-xl bg-white" />
+                <input id="newProdImg" placeholder="Ссылка на фото (URL или из VK)" class="w-2/3 p-2 border rounded-xl bg-white" />
+              </div>
+              <textarea id="newProdDesc" placeholder="Подробное описание товара" class="w-full p-2 border rounded-xl bg-white h-14"></textarea>
+              <button onclick="addProduct()" class="w-full bg-blue-600 text-white rounded-xl font-bold py-2 shadow-sm">Добавить товар в каталог</button>
+            </div>
+
+            <!-- Список всех товаров тренера -->
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Товары в каталоге (${state.data.products.length} шт):</span>
               <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
@@ -704,6 +717,26 @@
       render();
     }
 
+    function addProduct() {
+      const title = document.getElementById('newProdTitle').value.trim();
+      const price = parseInt(document.getElementById('newProdPrice').value) || 0;
+      const img = document.getElementById('newProdImg').value.trim() || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
+      const desc = document.getElementById('newProdDesc').value.trim();
+
+      if (!title || !price) return alert("Укажите название и цену товара!");
+
+      state.data.products.unshift({
+        id: Date.now(),
+        title: title,
+        price: price,
+        desc: desc || "Качественная экипировка для плавания.",
+        image: img
+      });
+      saveData(state.data);
+      render();
+      alert("Товар успешно добавлен в каталог магазина!");
+    }
+
     function deleteProduct(prodId) {
       if (!confirm("Удалить этот товар из витрины?")) return;
       state.data.products = state.data.products.filter(p => p.id !== prodId);
@@ -711,7 +744,7 @@
       render();
     }
 
-    // Запуск
+    // Запуск приложения
     render();
   </script>
 </body>
