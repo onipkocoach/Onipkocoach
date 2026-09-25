@@ -10,8 +10,6 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <!-- Библиотека для генерации QR-кода -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -60,12 +58,12 @@
 
     <!-- Статус базы данных -->
     <div id="loadingStatus" class="p-2 bg-blue-950/80 text-blue-300 text-[11px] font-semibold text-center flex items-center justify-center gap-2 border-b border-blue-900/40">
-      <i class="fa-solid fa-circle-notch fa-spin text-red-500"></i> Синхронизация с сервером...
+      <i class="fa-solid fa-circle-notch fa-spin text-red-500"></i> Подключение к онлайн-базе...
     </div>
 
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Динамический контент -->
+      <!-- Контент формируется сразу -->
     </main>
 
     <!-- Модалка добавления самостоятельного наплава -->
@@ -89,7 +87,6 @@
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
 
-    // Европейский точный адрес вашей базы
     const firebaseConfig = {
       apiKey: "AIzaSyBeZtO1OYVQ0zrCXmpgCxiw1E1M8uX5Z-E",
       authDomain: "onipko-coach.firebaseapp.com",
@@ -100,10 +97,6 @@
       appId: "1:560983610:web:22ba35013281d014b14f03",
       measurementId: "G-XN1D9SXGXM"
     };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const dbRef = db.ref('app_data');
 
     const VLADIVOSTOK_ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
@@ -129,7 +122,7 @@
             category: "Очки",
             title: "Mad Wave Alien",
             price: 3490,
-            desc: "Стартово-тренировочные очки с зеркальным напылением и идеальной гидродинамикой.",
+            desc: "Стартово-тренировочные очки с зеркальным напылением и гидродинамичной посадкой.",
             image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80"
           }
         ]
@@ -141,7 +134,51 @@
       checklist: { glasses: false, cap: false, suit: false, towel: false }
     };
 
-    // Автоматическое списание тренировки после наступления времени
+    // Сразу рисуем экран, не дожидаясь ответа сервера
+    render();
+
+    // Инициализация Firebase с перехватом ошибок
+    let dbRef = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      dbRef = db.ref('app_data');
+
+      dbRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        const loader = document.getElementById('loadingStatus');
+        if (loader) loader.classList.add('hidden');
+
+        if (val) {
+          state.data = val;
+          if (!state.data.clients) state.data.clients = [];
+          if (!state.data.slots) state.data.slots = [];
+          if (!state.data.products) state.data.products = [];
+
+          if (processCompletedSessions()) {
+            saveToServer();
+          }
+        } else {
+          dbRef.set(state.data);
+        }
+        render();
+      }, (error) => {
+        console.error(error);
+        const loader = document.getElementById('loadingStatus');
+        if (loader) {
+          loader.classList.remove('hidden');
+          loader.innerHTML = `<span class="text-amber-400">Ошибка базы данных: ${error.message}</span>`;
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      const loader = document.getElementById('loadingStatus');
+      if (loader) {
+        loader.classList.remove('hidden');
+        loader.innerHTML = `<span class="text-amber-400">Сбой подключения. Проверьте сеть.</span>`;
+      }
+    }
+
     function processCompletedSessions() {
       if (!state.data.slots || !state.data.slots.length) return false;
       const now = new Date();
@@ -167,26 +204,6 @@
       return hasChanges;
     }
 
-    dbRef.on('value', (snapshot) => {
-      const val = snapshot.val();
-      const loader = document.getElementById('loadingStatus');
-      if (loader) loader.classList.add('hidden');
-
-      if (val) {
-        state.data = val;
-        if (!state.data.clients) state.data.clients = [];
-        if (!state.data.slots) state.data.slots = [];
-        if (!state.data.products) state.data.products = [];
-
-        if (processCompletedSessions()) {
-          saveToServer();
-        }
-      } else {
-        dbRef.set(state.data);
-      }
-      render();
-    });
-
     setInterval(() => {
       if (processCompletedSessions()) {
         saveToServer();
@@ -195,7 +212,7 @@
     }, 60000);
 
     function saveToServer() {
-      dbRef.set(state.data);
+      if (dbRef) dbRef.set(state.data);
     }
 
     function switchTab(tab) {
@@ -343,12 +360,15 @@
 
     function render() {
       const main = document.getElementById('appContent');
+      if (!main) return;
       const nav = document.getElementById('clientTabs');
 
-      if (state.currentView === 'admin') {
-        nav.classList.add('hidden');
-      } else {
-        nav.classList.remove('hidden');
+      if (nav) {
+        if (state.currentView === 'admin') {
+          nav.classList.add('hidden');
+        } else {
+          nav.classList.remove('hidden');
+        }
       }
 
       // 1. Вход ученика
@@ -371,7 +391,7 @@
 
       // 2. Личный кабинет ученика
       if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
-        const client = state.data.clients.find(c => c.id === state.currentClientId);
+        const client = state.data.clients.find(c => c.id === state.currentClientId) || { name: "Ученик", balance: 0, meters: 0, id: state.currentClientId };
         const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
         const freeSlots = state.data.slots.filter(s => !s.bookedBy && !s.completed);
         const route = calculateRouteProgress(client.meters || 0);
@@ -527,6 +547,7 @@
       // 3. Панель тренера (Admin)
       if (state.currentView === 'admin') {
         const sortedSlots = [...state.data.slots].sort((a,b) => (a.date || '') > (b.date || '') ? 1 : -1);
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.href)}`;
 
         main.innerHTML = `
           <div class="space-y-4">
@@ -539,13 +560,13 @@
             </div>
 
             <!-- Блок QR-кода на сайт -->
-            <div class="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-500/40 p-3.5 rounded-2xl flex items-center justify-between shadow-md">
+            <div class="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-md">
               <div class="pr-2">
-                <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-wider block">Быстрый доступ</span>
-                <h3 class="text-xs font-black text-white">QR-код вашего сайта</h3>
-                <p class="text-[10px] text-slate-400 mt-0.5">Покажите ученику для мгновенного перехода в кабинет</p>
+                <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-wider block">Быстрый вход</span>
+                <h3 class="text-xs font-black text-white">QR-код на сайт</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5">Покажите ученику для перехода на сайт с телефона</p>
               </div>
-              <div id="adminQrBlock" class="bg-white p-1.5 rounded-xl flex-shrink-0 shadow-lg"></div>
+              <img src="${qrUrl}" alt="QR Code" class="w-16 h-16 rounded-xl border border-white/20 bg-white p-1 flex-shrink-0">
             </div>
 
             <!-- Генератор окон 07:00 - 23:00 -->
@@ -623,23 +644,6 @@
 
           </div>
         `;
-
-        // Генерация QR-кода на текущий URL сайта
-        setTimeout(() => {
-          const qrContainer = document.getElementById('adminQrBlock');
-          if (qrContainer && typeof QRCode !== 'undefined') {
-            qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
-              text: window.location.href,
-              width: 72,
-              height: 72,
-              colorDark: "#020617",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.M
-            });
-          }
-        }, 50);
-
         return;
       }
 
@@ -760,8 +764,6 @@
       saveToServer();
       render();
     }
-
-    render();
   </script>
 </body>
 </html>
