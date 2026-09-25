@@ -10,6 +10,8 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Библиотека для генерации QR-кода -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -21,7 +23,7 @@
 
   <div class="w-full max-w-md bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col min-h-[750px] relative">
     
-    <!-- Шапка профиля в сине-красном стиле -->
+    <!-- Шапка профиля -->
     <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-red-700 text-white p-5 relative border-b border-red-500/30">
       <div class="flex justify-between items-start">
         <div>
@@ -63,7 +65,7 @@
 
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Контент формируется динамически -->
+      <!-- Динамический контент -->
     </main>
 
     <!-- Модалка добавления самостоятельного наплава -->
@@ -87,10 +89,11 @@
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
 
+    // Европейский точный адрес вашей базы
     const firebaseConfig = {
       apiKey: "AIzaSyBeZtO1OYVQ0zrCXmpgCxiw1E1M8uX5Z-E",
       authDomain: "onipko-coach.firebaseapp.com",
-      databaseURL: "https://onipko-coach-default-rtdb.firebaseio.com",
+      databaseURL: "https://onipko-coach-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "onipko-coach",
       storageBucket: "onipko-coach.firebasestorage.app",
       messagingSenderId: "560983610",
@@ -102,7 +105,6 @@
     const db = firebase.database();
     const dbRef = db.ref('app_data');
 
-    // Маршруты от Центра Владивостока на авто (в км)
     const VLADIVOSTOK_ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
       { name: "Вторая Речка (Автовокзал)", km: 8.0 },
@@ -139,7 +141,7 @@
       checklist: { glasses: false, cap: false, suit: false, towel: false }
     };
 
-    // Автоматическое списание тренировок строго после завершения по времени
+    // Автоматическое списание тренировки после наступления времени
     function processCompletedSessions() {
       if (!state.data.slots || !state.data.slots.length) return false;
       const now = new Date();
@@ -210,7 +212,6 @@
       render();
     }
 
-    // Расчет текущей авто-точки от Центра Владивостока
     function calculateRouteProgress(totalMeters) {
       const totalKm = (totalMeters || 0) / 1000;
       let reached = "Центральная площадь";
@@ -266,7 +267,6 @@
       }
     }
 
-    // Генерация слотов 07:00 - 23:00 (Пн-Сб)
     function generateDaySlots() {
       const dateInput = document.getElementById('adminBatchDate').value;
       if (!dateInput) return alert("Выберите дату!");
@@ -337,7 +337,7 @@
       const end = new Date(start.getTime() + 60 * 60 * 1000);
       const formatTime = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
 
-      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Плавание с Кириллом Онипко")}&dates=${formatTime(start)}/${formatTime(end)}&details=${encodeURIComponent("Тренировка в бассейне. Взять очки, шапочку, плавки и полотенце.")}`;
+      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Плавание с Кириллом Онипко")}&dates=${formatTime(start)}/${formatTime(end)}&details=${encodeURIComponent("Тренировка в бассейне. Взять экипировку.")}`;
       window.open(url, '_blank');
     }
 
@@ -376,7 +376,6 @@
         const freeSlots = state.data.slots.filter(s => !s.bookedBy && !s.completed);
         const route = calculateRouteProgress(client.meters || 0);
 
-        // Фильтрация свободных окон по времени суток
         const filteredFreeSlots = freeSlots.filter(s => {
           const hour = parseInt(s.time.split(':')[0]);
           if (state.slotFilterPeriod === 'morning') return hour >= 7 && hour < 12;
@@ -388,7 +387,6 @@
         main.innerHTML = `
           <div class="space-y-4">
             
-            <!-- Профиль и баланс -->
             <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl border border-blue-900/50 flex justify-between items-center shadow-md">
               <div>
                 <span class="text-[10px] text-red-400 font-extrabold uppercase">Пловец</span>
@@ -402,7 +400,7 @@
               </div>
             </div>
 
-            <!-- Владивостокский Авто-Трекер километража -->
+            <!-- Маршрут из Центра Владивостока -->
             <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 rounded-2xl border border-blue-500/20 shadow-md">
               <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center gap-2">
@@ -438,7 +436,7 @@
               `}
             </div>
 
-            <!-- Чек-лист в бассейн -->
+            <!-- Чек-лист экипировки -->
             <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 block">
                 <i class="fa-solid fa-clipboard-check text-blue-400 mr-1"></i> Чек-лист перед выходом в бассейн:
@@ -463,7 +461,7 @@
               </div>
             </div>
 
-            <!-- Мои тренировки -->
+            <!-- Активные тренировки -->
             <div>
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши тренировки:</span>
               ${mySlots.length === 0 ? '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">Нет активных тренировок.</p>' : ''}
@@ -489,11 +487,10 @@
               </div>
             </div>
 
-            <!-- Запись на тренировку (07:00 - 23:00) -->
+            <!-- Свободные окна тренера -->
             <div>
               <div class="flex justify-between items-center mb-1.5">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Свободные окна тренера</span>
-                <!-- Фильтры по времени дня -->
                 <div class="flex gap-1 text-[10px]">
                   <button onclick="state.slotFilterPeriod='all'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='all' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Все</button>
                   <button onclick="state.slotFilterPeriod='morning'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='morning' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Утро</button>
@@ -541,7 +538,17 @@
               <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
             </div>
 
-            <!-- Генератор полной сетки 07:00 - 23:00 -->
+            <!-- Блок QR-кода на сайт -->
+            <div class="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-500/40 p-3.5 rounded-2xl flex items-center justify-between shadow-md">
+              <div class="pr-2">
+                <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-wider block">Быстрый доступ</span>
+                <h3 class="text-xs font-black text-white">QR-код вашего сайта</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5">Покажите ученику для мгновенного перехода в кабинет</p>
+              </div>
+              <div id="adminQrBlock" class="bg-white p-1.5 rounded-xl flex-shrink-0 shadow-lg"></div>
+            </div>
+
+            <!-- Генератор окон 07:00 - 23:00 -->
             <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-blue-200 block">Открыть окна на день (07:00 - 23:00, Пн-Сб):</span>
               <div class="flex gap-2">
@@ -565,7 +572,7 @@
               </div>
             </div>
 
-            <!-- Список окон и закрепление ученика -->
+            <!-- Окна и привязка -->
             <div>
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Окна и закрепление клиентов:</span>
               <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
@@ -604,7 +611,7 @@
                       <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
                     </div>
                     <div class="flex items-center gap-1">
-                      <button onclick="addCoachMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]" title="Добавить метры за занятие">+Метры</button>
+                      <button onclick="addCoachMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]" title="Добавить метры">+Метры</button>
                       <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
                       <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
                       <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
@@ -616,6 +623,23 @@
 
           </div>
         `;
+
+        // Генерация QR-кода на текущий URL сайта
+        setTimeout(() => {
+          const qrContainer = document.getElementById('adminQrBlock');
+          if (qrContainer && typeof QRCode !== 'undefined') {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+              text: window.location.href,
+              width: 72,
+              height: 72,
+              colorDark: "#020617",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          }
+        }, 50);
+
         return;
       }
 
@@ -656,16 +680,15 @@
       }
     }
 
-    // Внесение тренером наплаванного объема ученику
     function addCoachMeters(clientId) {
       const client = state.data.clients.find(c => c.id === clientId);
       if (!client) return;
-      const meters = prompt(`Сколько метров проплыл ${client.name} на этой тренировке? (например, 1500):`);
+      const meters = prompt(`Сколько метров проплыл ${client.name} на тренировке? (например: 1500):`);
       if (meters && parseInt(meters) > 0) {
         client.meters = (client.meters || 0) + parseInt(meters);
         saveToServer();
         render();
-        alert(`${meters} м успешно зачислено в маршрут ученика!`);
+        alert(`${meters} м успешно зачислено!`);
       }
     }
 
