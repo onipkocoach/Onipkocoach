@@ -6,6 +6,11 @@
   <title>Тренер по плаванию | Кирилл Онипко</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -41,7 +46,7 @@
       </div>
     </header>
 
-    <!-- Навигационные вкладки -->
+    <!-- Вкладки навигации -->
     <nav id="clientTabs" class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500">
       <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-user"></i> Профиль и запись
@@ -51,9 +56,14 @@
       </button>
     </nav>
 
+    <!-- Индикатор загрузки базы -->
+    <div id="loadingStatus" class="p-2 bg-blue-50 text-blue-600 text-[11px] font-semibold text-center flex items-center justify-center gap-2">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Подключение к онлайн-базе...
+    </div>
+
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Контент -->
+      <!-- Динамический контент -->
     </main>
 
     <!-- Модалка просмотра товара -->
@@ -66,14 +76,14 @@
       </div>
     </div>
 
-    <!-- Модалка редактирования товара тренером -->
+    <!-- Модалка редактирования товара -->
     <div id="editProductModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-md rounded-3xl p-5 relative max-h-[90vh] overflow-y-auto">
         <button onclick="closeEditProductModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 class="text-base font-bold text-slate-800 mb-3">Редактировать товар</h3>
-        <div id="editProductForm" class="space-y-2 text-xs"></div>
+        <div id="editProductForm" class="space-y-3 text-xs"></div>
       </div>
     </div>
 
@@ -82,17 +92,31 @@
   <script>
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
-    const STORAGE_KEY = "kirill_swimming_v6";
+
+    // Конфигурация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeZtO1OYVQ0zrCXmpgCxiw1E1M8uX5Z-E",
+      authDomain: "onipko-coach.firebaseapp.com",
+      databaseURL: "https://onipko-coach-default-rtdb.firebaseio.com",
+      projectId: "onipko-coach",
+      storageBucket: "onipko-coach.firebasestorage.app",
+      messagingSenderId: "560983610",
+      appId: "1:560983610:web:22ba35013281d014b14f03",
+      measurementId: "G-XN1D9SXGXM"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const dbRef = db.ref('app_data');
 
     const defaultCategories = ["Очки", "Шапочки", "Инвентарь"];
-
     const defaultProducts = [
       {
         id: 101,
         category: "Очки",
         title: "Mad Wave Alien",
         price: 3490,
-        desc: "Стартово-тренировочные очки с гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE комфортно прилегает к лицу. 4 сменные переносицы.",
+        desc: "Стартово-тренировочные очки с гидродинамичной формой линз. Мягкий эргономичный обтюратор TPE. 4 сменные переносицы.",
         image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
         colors: ["Серый / Желтый", "Черный / Дымчатый", "Белый / Прозрачный"]
       },
@@ -101,7 +125,7 @@
         category: "Очки",
         title: "Mad Wave Alien Rainbow",
         price: 3990,
-        desc: "Стартовая версия с зеркальным напылением Rainbow. Защита от бликов, UV 400 и Antifog.",
+        desc: "Стартовая модель с радужным зеркальным напылением Rainbow. Защита от бликов, UV 400 и Antifog.",
         image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
         colors: ["Салатовый / Радужный", "Бело-розовый", "Черно-красный"]
       },
@@ -110,34 +134,23 @@
         category: "Очки",
         title: "Mad Wave Aqua Fusion",
         price: 2890,
-        desc: "Панорамные очки для плавания. Обзор свыше 180° без оптических искажений. Монолитная сверхмягкая оправа.",
+        desc: "Панорамные очки для заплывов с широким обзором 180° без оптических искажений.",
         image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=400&q=80",
         colors: ["Прозрачный / Синий", "Дымчатый / Черный"]
       },
       {
         id: 104,
         category: "Очки",
-        title: "Mad Wave Record Breaker Mirror",
-        price: 2890,
-        desc: "Стартовая модель с зеркальным напылением. Одобрено FINA / World Aquatics.",
-        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
-        colors: ["Серебро / Черный", "Золото / Синий"]
-      },
-      {
-        id: 105,
-        category: "Очки",
         title: "Mad Wave Turbo Racer II",
         price: 1490,
-        desc: "Классические стартовые жесткие шведки без уплотнителя. Максимальная гидродинамика.",
-        image: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=400&q=80",
+        desc: "Классические стартовые жесткие стекляшки-шведки без уплотнителя.",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
         colors: ["Прозрачный", "Дымчатый", "Синий"]
       }
     ];
 
-    function loadData() {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) return JSON.parse(data);
-      return {
+    let state = {
+      data: {
         clients: [],
         slots: [
           { id: 1, day: "Вторник", time: "09:00", bookedBy: null },
@@ -148,15 +161,7 @@
         ],
         categories: defaultCategories,
         products: defaultProducts
-      };
-    }
-
-    function saveData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    let state = {
-      data: loadData(),
+      },
       currentView: 'client_login',
       currentTab: 'booking',
       currentClientId: null,
@@ -165,6 +170,64 @@
       tempNewProdImage: '',
       tempEditProdImage: ''
     };
+
+    // Синхронизация с сервером Firebase
+    dbRef.on('value', (snapshot) => {
+      const val = snapshot.val();
+      const loader = document.getElementById('loadingStatus');
+      if (loader) loader.classList.add('hidden');
+
+      if (val) {
+        state.data = val;
+        if (!state.data.clients) state.data.clients = [];
+        if (!state.data.slots) state.data.slots = [];
+        if (!state.data.products) state.data.products = [];
+        if (!state.data.categories) state.data.categories = defaultCategories;
+      } else {
+        // Инициализация пустой базы
+        dbRef.set(state.data);
+      }
+      render();
+    }, (error) => {
+      console.error(error);
+      const loader = document.getElementById('loadingStatus');
+      if (loader) loader.innerHTML = `<span class="text-amber-700">Ошибка связи с базой. Проверьте вкладку Rules в Firebase!</span>`;
+    });
+
+    function saveToServer() {
+      dbRef.set(state.data);
+    }
+
+    // Сжатие фото из галереи устройства
+    function compressImage(file, maxWidth, maxHeight, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
 
     function switchTab(tab) {
       state.currentTab = tab;
@@ -186,7 +249,54 @@
       render();
     }
 
-    // --- МОДАЛКА ТОВАРА ---
+    // Фото ученика и товаров
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      compressImage(file, 240, 240, 0.85, function(compressedUrl) {
+        const client = state.data.clients.find(c => c.id === state.currentClientId);
+        if (client) {
+          client.avatar = compressedUrl;
+          saveToServer();
+          render();
+        }
+      });
+    }
+
+    function handleNewProductPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      compressImage(file, 500, 500, 0.85, function(compressedUrl) {
+        state.tempNewProdImage = compressedUrl;
+        const preview = document.getElementById('newProdPreview');
+        if (preview) {
+          preview.src = compressedUrl;
+          preview.classList.remove('hidden');
+        }
+        const status = document.getElementById('newProdPhotoStatus');
+        if (status) status.textContent = "Фото загружено!";
+      });
+    }
+
+    function handleEditProductPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      compressImage(file, 500, 500, 0.85, function(compressedUrl) {
+        state.tempEditProdImage = compressedUrl;
+        const preview = document.getElementById('editProdPreview');
+        if (preview) {
+          preview.src = compressedUrl;
+          preview.classList.remove('hidden');
+        }
+        const status = document.getElementById('editPhotoStatus');
+        if (status) status.textContent = "Фото обновлено!";
+      });
+    }
+
+    // Модальное окно просмотра товара
     function openProductModal(productId) {
       const product = state.data.products.find(p => p.id === productId);
       if (!product) return;
@@ -255,7 +365,7 @@
       window.open(`https://t.me/${TG_USERNAME}?text=${message}`, '_blank');
     }
 
-    // --- РЕДАКТИРОВАНИЕ ТОВАРА ТРЕНЕРОМ ---
+    // Редактирование товара
     function openEditProductModal(productId) {
       const p = state.data.products.find(item => item.id === productId);
       if (!p) return;
@@ -265,58 +375,53 @@
       const form = document.getElementById('editProductForm');
       form.innerHTML = `
         <div>
-          <label class="font-bold text-slate-600 block mb-1">Название:</label>
-          <input id="editTitle" value="${p.title}" class="w-full p-2 border rounded-xl bg-slate-50" />
+          <label class="font-bold text-slate-600 block mb-1">Название товара:</label>
+          <input id="editTitle" value="${p.title}" class="w-full p-2.5 border rounded-xl bg-slate-50 font-medium" />
         </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="font-bold text-slate-600 block mb-1">Категория:</label>
-            <select id="editCategory" class="w-full p-2 border rounded-xl bg-slate-50">
+            <label class="font-bold text-slate-600 block mb-1">Раздел:</label>
+            <select id="editCategory" class="w-full p-2.5 border rounded-xl bg-slate-50 font-medium">
               ${cats.map(c => `<option value="${c}" ${p.category === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
           <div>
             <label class="font-bold text-slate-600 block mb-1">Цена (₽):</label>
-            <input id="editPrice" type="number" value="${p.price}" class="w-full p-2 border rounded-xl bg-slate-50" />
+            <input id="editPrice" type="number" value="${p.price}" class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold" />
           </div>
         </div>
+
         <div>
-          <label class="font-bold text-slate-600 block mb-1">Фото товара (из фотоплёнки или ссылка):</label>
-          <div class="flex gap-2 items-center mb-1">
-            <label class="bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-100 flex items-center gap-1 text-[11px]">
-              <i class="fa-regular fa-image"></i> Выбрать из фотоплёнки
-              <input type="file" accept="image/*" class="hidden" onchange="handleEditProductFile(event)" />
-            </label>
-            <span id="editFileStatus" class="text-[10px] text-emerald-600 font-semibold"></span>
+          <label class="font-bold text-slate-600 block mb-1">Фото товара:</label>
+          <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+            <img id="editProdPreview" src="${p.image}" class="w-14 h-14 object-cover rounded-xl border border-slate-200 bg-white" onerror="this.src='https://placehold.co/100x100?text=Товар'">
+            <div class="flex-1">
+              <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl cursor-pointer inline-flex items-center gap-1.5 text-[11px] shadow-sm transition">
+                <i class="fa-solid fa-camera"></i> Изменить из фотоплёнки
+                <input type="file" accept="image/*" class="hidden" onchange="handleEditProductPhoto(event)" />
+              </label>
+              <p id="editPhotoStatus" class="text-[10px] text-emerald-600 font-semibold mt-1"></p>
+            </div>
           </div>
-          <input id="editImage" value="${p.image}" placeholder="или вставьте ссылку" class="w-full p-2 border rounded-xl bg-slate-50" />
         </div>
+
         <div>
           <label class="font-bold text-slate-600 block mb-1">Цвета (через запятую):</label>
-          <input id="editColors" value="${p.colors ? p.colors.join(', ') : ''}" placeholder="Черный, Синий, Красный" class="w-full p-2 border rounded-xl bg-slate-50" />
+          <input id="editColors" value="${p.colors ? p.colors.join(', ') : ''}" placeholder="Черный, Синий, Красный" class="w-full p-2.5 border rounded-xl bg-slate-50" />
         </div>
+
         <div>
           <label class="font-bold text-slate-600 block mb-1">Описание:</label>
-          <textarea id="editDesc" class="w-full p-2 border rounded-xl bg-slate-50 h-16">${p.desc || ''}</textarea>
+          <textarea id="editDesc" class="w-full p-2.5 border rounded-xl bg-slate-50 h-20">${p.desc || ''}</textarea>
         </div>
-        <button onclick="saveProductChanges(${p.id})" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-blue-700 transition">
+
+        <button onclick="saveProductChanges(${p.id})" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-1 shadow-md transition text-sm">
           Сохранить изменения
         </button>
       `;
 
       document.getElementById('editProductModal').classList.remove('hidden');
-    }
-
-    function handleEditProductFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        state.tempEditProdImage = evt.target.result;
-        document.getElementById('editImage').value = evt.target.result;
-        document.getElementById('editFileStatus').textContent = "Фото выбрано!";
-      };
-      reader.readAsDataURL(file);
     }
 
     function saveProductChanges(productId) {
@@ -326,54 +431,23 @@
       p.title = document.getElementById('editTitle').value.trim();
       p.category = document.getElementById('editCategory').value;
       p.price = parseInt(document.getElementById('editPrice').value) || 0;
-      p.image = document.getElementById('editImage').value.trim() || state.tempEditProdImage;
+      p.image = state.tempEditProdImage || p.image;
       p.desc = document.getElementById('editDesc').value.trim();
 
       const colorsVal = document.getElementById('editColors').value.trim();
       p.colors = colorsVal ? colorsVal.split(',').map(c => c.trim()).filter(Boolean) : [];
 
-      saveData(state.data);
+      saveToServer();
       closeEditProductModal();
       render();
-      alert("Товар обновлен!");
+      alert("Товар сохранен на сервере!");
     }
 
     function closeEditProductModal() {
       document.getElementById('editProductModal').classList.add('hidden');
     }
 
-    // --- ОБНОВЛЕНИЕ АВАТАРКИ КЛИЕНТА ИЗ ГАЛЕРЕИ ---
-    function handleAvatarUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const client = state.data.clients.find(c => c.id === state.currentClientId);
-        if (client) {
-          client.avatar = e.target.result;
-          saveData(state.data);
-          render();
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // --- ОБРАБОТКА ФОТО НОВОГО ТОВАРА ---
-    function handleNewProductFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        state.tempNewProdImage = e.target.result;
-        document.getElementById('newProdImg').value = e.target.result;
-        document.getElementById('newProdFileStatus').textContent = "Фото выбрано!";
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // --- РЕНДЕР ИНТЕРФЕЙСА ---
+    // Отрисовка приложения
     function render() {
       const main = document.getElementById('appContent');
       const nav = document.getElementById('clientTabs');
@@ -384,7 +458,7 @@
         nav.classList.remove('hidden');
       }
 
-      // 1. ВХОД ДЛЯ КЛИЕНТА
+      // 1. Вход ученика
       if (state.currentView === 'client_login' && state.currentTab === 'booking') {
         main.innerHTML = `
           <div class="my-auto py-8">
@@ -397,7 +471,7 @@
             </div>
 
             <div class="space-y-3">
-              <input id="clientCodeInput" type="text" placeholder="Например: 1001" class="w-full text-center text-lg tracking-widest px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input id="clientCodeInput" type="text" placeholder="Например: 001" class="w-full text-center text-lg tracking-widest px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <button onclick="loginClient()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-2xl shadow-md transition">
                 Войти в профиль
               </button>
@@ -409,7 +483,7 @@
         return;
       }
 
-      // 2. ВИТРИНА МАГАЗИНА
+      // 2. Каталог магазина
       if (state.currentTab === 'shop' && state.currentView !== 'admin') {
         const categories = ["Все", ...(state.data.categories || defaultCategories)];
         const filteredProducts = state.selectedCategory === "Все" 
@@ -428,7 +502,6 @@
               </a>
             </div>
 
-            <!-- Горизонтальная прокрутка категорий -->
             <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3">
               ${categories.map(cat => `
                 <button onclick="setShopCategory('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${state.selectedCategory === cat ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}">
@@ -437,7 +510,6 @@
               `).join('')}
             </div>
 
-            <!-- Список товаров -->
             <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
               ${filteredProducts.length === 0 ? '<p class="text-xs text-slate-400 text-center py-6">В этом разделе пока нет товаров.</p>' : ''}
               ${filteredProducts.map(p => {
@@ -484,7 +556,7 @@
         return;
       }
 
-      // 3. ЛИЧНЫЙ КАБИНЕТ КЛИЕНТА (С АВАТАРКОЙ ИЗ ГАЛЕРЕИ)
+      // 3. Кабинет ученика
       if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
         const client = state.data.clients.find(c => c.id === state.currentClientId);
         const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
@@ -492,18 +564,19 @@
 
         main.innerHTML = `
           <div class="space-y-4">
-            <!-- Шапка профиля ученика с аватаркой из фотоплёнки -->
-            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
               <div class="flex items-center gap-3">
-                <label class="relative cursor-pointer" title="Нажмите, чтобы загрузить фото из галереи">
-                  <img src="${client.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-13 h-13 w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Фото'">
-                  <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white">📷</span>
+                <label class="relative cursor-pointer group" title="Загрузить фото из фотоплёнки">
+                  <img src="${client.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Фото'">
+                  <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+                    <i class="fa-solid fa-camera"></i>
+                  </span>
                   <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
                 </label>
                 <div>
                   <h2 class="text-sm font-bold text-slate-800 leading-tight">${client.name}</h2>
-                  <label class="text-[10px] text-blue-600 hover:underline cursor-pointer block mt-0.5">
-                    Загрузить фото с телефона
+                  <label class="text-[11px] text-blue-600 font-semibold hover:underline cursor-pointer inline-flex items-center gap-1 mt-1">
+                    <i class="fa-regular fa-image"></i> Фото из фотоплёнки
                     <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
                   </label>
                 </div>
@@ -513,7 +586,6 @@
               </button>
             </div>
 
-            <!-- Баланс тренировок -->
             <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3.5 flex items-center justify-between">
               <div>
                 <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Остаток тренировок</span>
@@ -524,7 +596,6 @@
               </a>
             </div>
 
-            <!-- Активные записи -->
             <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Ваши активные записи</h3>
               ${mySlots.length === 0 ? '<p class="text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Пока нет записей. Выберите свободное время ниже.</p>' : ''}
@@ -538,7 +609,6 @@
               </div>
             </div>
 
-            <!-- Свободные окна тренера -->
             <div>
               <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Свободные окна тренера</h3>
               <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -556,7 +626,7 @@
         return;
       }
 
-      // 4. ПАНЕЛЬ ТРЕНЕРА
+      // 4. Панель тренера (Admin)
       if (state.currentView === 'admin') {
         const categories = state.data.categories || defaultCategories;
 
@@ -575,7 +645,7 @@
               <span class="font-bold text-slate-700 block">Добавить нового ученика:</span>
               <div class="grid grid-cols-2 gap-2">
                 <input id="newClientName" placeholder="ФИО ученика" class="p-2 border rounded-xl bg-white" />
-                <input id="newClientCode" placeholder="Код входа (напр. 1001)" class="p-2 border rounded-xl bg-white" />
+                <input id="newClientCode" placeholder="Код входа (напр. 001)" class="p-2 border rounded-xl bg-white" />
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border rounded-xl bg-white" />
@@ -604,7 +674,7 @@
               </div>
             </div>
 
-            <!-- Добавить окно расписания -->
+            <!-- Окно графика -->
             <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Добавить окно в график:</span>
               <div class="flex gap-2">
@@ -629,7 +699,7 @@
               </div>
             </div>
 
-            <!-- Управление категориями -->
+            <!-- Категории -->
             <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-2">
               <span class="font-bold text-slate-700 block">Разделы (категории) магазина:</span>
               <div class="flex gap-2">
@@ -646,40 +716,49 @@
               </div>
             </div>
 
-            <!-- Добавить товар с выбором фото из фотоплёнки -->
-            <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-2xl text-xs space-y-2">
-              <span class="font-bold text-blue-900 block">Добавить новый товар:</span>
+            <!-- Добавить товар -->
+            <div class="bg-blue-50/70 border border-blue-200 p-3.5 rounded-2xl text-xs space-y-2.5">
+              <span class="font-bold text-blue-900 block text-sm">Добавить новый товар:</span>
               <div class="grid grid-cols-2 gap-2">
-                <input id="newProdTitle" placeholder="Название" class="p-2 border rounded-xl bg-white" />
-                <select id="newProdCategory" class="p-2 border rounded-xl bg-white">
+                <input id="newProdTitle" placeholder="Название товара" class="p-2.5 border rounded-xl bg-white" />
+                <select id="newProdCategory" class="p-2.5 border rounded-xl bg-white font-medium">
                   ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
                 </select>
               </div>
               <div class="grid grid-cols-2 gap-2">
-                <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="p-2 border rounded-xl bg-white" />
-                <label class="bg-white text-blue-600 font-bold p-2 rounded-xl border border-blue-200 cursor-pointer flex items-center justify-center gap-1 text-center truncate">
-                  <i class="fa-regular fa-image"></i> Из фотоплёнки
-                  <input type="file" accept="image/*" class="hidden" onchange="handleNewProductFile(event)" />
-                </label>
+                <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="p-2.5 border rounded-xl bg-white font-bold" />
+                <input id="newProdColors" placeholder="Цвета (черный, синий...)" class="p-2.5 border rounded-xl bg-white" />
               </div>
-              <div class="flex items-center gap-2">
-                <input id="newProdImg" placeholder="или ссылка на фото" class="flex-1 p-2 border rounded-xl bg-white text-[11px]" />
-                <span id="newProdFileStatus" class="text-[10px] text-emerald-600 font-semibold whitespace-nowrap"></span>
+              
+              <div class="bg-white p-2.5 rounded-xl border border-blue-200 flex items-center gap-3">
+                <img id="newProdPreview" class="hidden w-12 h-12 object-cover rounded-lg border border-slate-200" />
+                <div class="flex-1">
+                  <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-xl cursor-pointer inline-flex items-center gap-1.5 text-xs shadow-sm transition">
+                    <i class="fa-solid fa-camera"></i> Загрузить фото из фотоплёнки
+                    <input type="file" accept="image/*" class="hidden" onchange="handleNewProductPhoto(event)" />
+                  </label>
+                  <span id="newProdPhotoStatus" class="block text-[10px] text-emerald-600 font-semibold mt-1"></span>
+                </div>
               </div>
-              <input id="newProdColors" placeholder="Цвета через запятую (напр. Черный, Синий)" class="w-full p-2 border rounded-xl bg-white" />
-              <textarea id="newProdDesc" placeholder="Подробное описание" class="w-full p-2 border rounded-xl bg-white h-12"></textarea>
-              <button onclick="addProduct()" class="w-full bg-blue-600 text-white rounded-xl font-bold py-2 shadow-sm">Добавить товар в каталог</button>
+
+              <textarea id="newProdDesc" placeholder="Подробное описание товара" class="w-full p-2.5 border rounded-xl bg-white h-14"></textarea>
+              <button onclick="addProduct()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2.5 shadow-sm text-sm transition">
+                Добавить товар в каталог
+              </button>
             </div>
 
-            <!-- Список товаров с редактированием -->
+            <!-- Список товаров -->
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">Все товары (${state.data.products.length} шт):</span>
-              <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+              <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 ${state.data.products.map(p => `
                   <div class="flex justify-between items-center bg-white border border-slate-200 p-2 rounded-xl text-xs">
-                    <div class="truncate pr-2">
-                      <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">${p.category || 'Плавание'}</span>
-                      <span class="font-semibold text-slate-800 ml-1">${p.title} (${p.price} ₽)</span>
+                    <div class="flex items-center gap-2 truncate pr-2">
+                      <img src="${p.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-50 flex-shrink-0" onerror="this.src='https://placehold.co/50x50?text=Товар'">
+                      <div class="truncate">
+                        <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">${p.category || 'Плавание'}</span>
+                        <p class="font-semibold text-slate-800 truncate">${p.title} (${p.price} ₽)</p>
+                      </div>
                     </div>
                     <div class="flex gap-1 flex-shrink-0">
                       <button onclick="openEditProductModal(${p.id})" class="w-7 h-7 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg flex items-center justify-center" title="Редактировать товар">
@@ -699,7 +778,7 @@
       }
     }
 
-    // --- ЛОГИКА ---
+    // Логика приложения
     function loginClient() {
       const code = document.getElementById('clientCodeInput').value.trim();
       const client = state.data.clients.find(c => c.id === code || c.phone === code);
@@ -743,7 +822,7 @@
       const slot = state.data.slots.find(s => s.id === slotId);
       slot.bookedBy = client.id;
       client.balance -= 1;
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
@@ -752,7 +831,7 @@
       const slot = state.data.slots.find(s => s.id === slotId);
       slot.bookedBy = null;
       client.balance += 1;
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
@@ -763,7 +842,7 @@
       if (!name || !code) return alert("Заполните имя и код");
 
       state.data.clients.push({ id: code, name: name, phone: code, balance: bal, avatar: "" });
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
@@ -771,7 +850,7 @@
       if (!confirm("Удалить ученика?")) return;
       state.data.slots.forEach(s => { if (s.bookedBy === clientId) s.bookedBy = null; });
       state.data.clients = state.data.clients.filter(c => c.id !== clientId);
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
@@ -779,7 +858,7 @@
       const client = state.data.clients.find(c => c.id === clientId);
       if (client) {
         client.balance = Math.max(0, client.balance + delta);
-        saveData(state.data);
+        saveToServer();
         render();
       }
     }
@@ -790,7 +869,14 @@
       if (!time) return alert("Введите время");
 
       state.data.slots.push({ id: Date.now(), day: day, time: time, bookedBy: null });
-      saveData(state.data);
+      saveToServer();
+      render();
+    }
+
+    function deleteSlot(slotId) {
+      if (!confirm("Удалить окно?")) return;
+      state.data.slots = state.data.slots.filter(s => s.id !== slotId);
+      saveToServer();
       render();
     }
 
@@ -800,7 +886,7 @@
       state.data.categories = state.data.categories || defaultCategories;
       if (!state.data.categories.includes(name)) {
         state.data.categories.push(name);
-        saveData(state.data);
+        saveToServer();
         render();
       }
     }
@@ -808,7 +894,7 @@
     function deleteCategory(cat) {
       if (!confirm(`Удалить раздел "${cat}"?`)) return;
       state.data.categories = (state.data.categories || defaultCategories).filter(c => c !== cat);
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
@@ -816,7 +902,7 @@
       const title = document.getElementById('newProdTitle').value.trim();
       const cat = document.getElementById('newProdCategory').value;
       const price = parseInt(document.getElementById('newProdPrice').value) || 0;
-      const img = document.getElementById('newProdImg').value.trim() || state.tempNewProdImage || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
+      const img = state.tempNewProdImage || 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80';
       const colorsVal = document.getElementById('newProdColors').value.trim();
       const desc = document.getElementById('newProdDesc').value.trim();
 
@@ -832,7 +918,7 @@
         colors: colorsVal ? colorsVal.split(',').map(c => c.trim()).filter(Boolean) : []
       });
       state.tempNewProdImage = '';
-      saveData(state.data);
+      saveToServer();
       render();
       alert("Товар добавлен!");
     }
@@ -840,11 +926,10 @@
     function deleteProduct(prodId) {
       if (!confirm("Удалить этот товар из витрины?")) return;
       state.data.products = state.data.products.filter(p => p.id !== prodId);
-      saveData(state.data);
+      saveToServer();
       render();
     }
 
-    // Запуск
     render();
   </script>
 </body>
