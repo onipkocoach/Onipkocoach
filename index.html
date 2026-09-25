@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -27,8 +27,8 @@
           <h1 class="text-2xl font-black tracking-tight leading-tight">Кирилл Онипко</h1>
           <p class="text-blue-200 text-xs font-medium">Персональный тренер по плаванию</p>
         </div>
-        <button onclick="toggleAdminAuth()" class="bg-black/30 hover:bg-red-600/80 p-2.5 rounded-full transition text-white border border-white/10" title="Тренер">
-          <i class="fa-solid fa-lock text-xs"></i>
+        <button type="button" onclick="openAdminModal()" class="bg-black/30 active:scale-95 p-3 rounded-full transition text-white border border-white/10" title="Тренер">
+          <i class="fa-solid fa-lock text-sm"></i>
         </button>
       </div>
 
@@ -44,10 +44,10 @@
 
     <!-- Вкладки навигации -->
     <nav id="clientTabs" class="flex border-b border-slate-800 bg-slate-900/90 text-xs font-bold text-slate-400">
-      <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
+      <button type="button" onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-person-swimming"></i> Кабинет и запись
       </button>
-      <button onclick="switchTab('shop')" id="tabShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
+      <button type="button" onclick="switchTab('shop')" id="tabShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-bag-shopping"></i> Экипировка
       </button>
     </nav>
@@ -60,29 +60,37 @@
 
     <!-- Основной экран -->
     <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <div class="my-auto py-8 text-center">
-        <div class="w-16 h-16 bg-blue-900/40 border border-blue-500/30 text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg">
-          <i class="fa-solid fa-person-swimming"></i>
+      <!-- Контент рендерится JS -->
+    </main>
+
+    <!-- Модалка входа тренера (PIN) -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-5 text-center relative shadow-2xl">
+        <button type="button" onclick="closeAdminModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="w-12 h-12 bg-red-950/60 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-red-400">
+          <i class="fa-solid fa-key"></i>
         </div>
-        <h2 class="text-xl font-black text-white">Кабинет пловца</h2>
-        <p class="text-slate-400 text-xs mt-1 mb-5">Введите ваш персональный код доступа</p>
-        <input id="clientCodeInput" type="text" placeholder="Например: 001" class="w-full text-center text-xl tracking-widest px-4 py-3.5 bg-slate-900 border border-slate-700 rounded-2xl font-black text-white mb-3 focus:border-red-500 focus:outline-none" />
-        <button onclick="loginClient()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 hover:from-blue-600 hover:to-red-500 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
-          Войти в профиль
+        <h3 class="text-base font-black text-white mb-1">Панель тренера</h3>
+        <p class="text-xs text-slate-400 mb-4">Введите 4-значный PIN-код</p>
+        <input id="adminPinInput" type="password" maxlength="4" placeholder="••••" class="w-full text-center text-2xl tracking-widest p-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-black mb-3 focus:outline-none focus:border-red-500" />
+        <button type="button" onclick="submitAdminPin()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition text-xs shadow-lg">
+          Войти в панель
         </button>
       </div>
-    </main>
+    </div>
 
     <!-- Модалка самостоятельного наплава -->
     <div id="distanceModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 relative">
-        <button onclick="closeDistanceModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 relative shadow-2xl">
+        <button type="button" onclick="closeDistanceModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 class="text-sm font-bold text-white mb-2">Внести самостоятельный заплыв</h3>
-        <p class="text-[11px] text-slate-400 mb-3">Метры добавятся в ваш общий маршрут из Центра Владивостока</p>
+        <p class="text-[11px] text-slate-400 mb-3">Метры добавятся в ваш маршрут из Центра Владивостока</p>
         <input id="manualMetersInput" type="number" placeholder="Например: 1200 м" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-center mb-3 focus:outline-none focus:border-red-500" />
-        <button onclick="addManualDistance()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow-lg">
+        <button type="button" onclick="addManualDistance()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow-lg">
           Сохранить дистанцию
         </button>
       </div>
@@ -94,14 +102,12 @@
     const ADMIN_PIN = "1234";
     const TG_USERNAME = "kkkkk_ooooo";
 
-    // Возможные адреса вашей базы данных Firebase
     const DB_ENDPOINTS = [
       "https://onipko-coach-default-rtdb.europe-west1.firebasedatabase.app/app_data.json",
       "https://onipko-coach-default-rtdb.firebaseio.com/app_data.json"
     ];
     let workingEndpoint = DB_ENDPOINTS[0];
 
-    // Маршруты от Центра Владивостока
     const VLADIVOSTOK_ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
       { name: "Вторая Речка (Автовокзал)", km: 8.0 },
@@ -133,7 +139,6 @@
       ]
     };
 
-    // Загрузка локальных данных
     let savedLocal = null;
     try {
       savedLocal = JSON.parse(localStorage.getItem('onipko_data'));
@@ -148,7 +153,6 @@
       checklist: { glasses: false, cap: false, suit: false, towel: false }
     };
 
-    // Списание тренировок после наступления даты и времени
     function processCompletedSessions() {
       if (!state.data.slots || !state.data.slots.length) return false;
       const now = new Date();
@@ -174,7 +178,6 @@
       return hasChanges;
     }
 
-    // Сохранение данных на сервер без зависаний
     async function saveToServer() {
       try {
         localStorage.setItem('onipko_data', JSON.stringify(state.data));
@@ -184,11 +187,10 @@
           body: JSON.stringify(state.data)
         });
       } catch (e) {
-        console.warn("Данные сохранены локально", e);
+        console.warn("Локальное сохранение", e);
       }
     }
 
-    // Загрузка данных с автоматическим выбором сервера
     async function fetchServerData() {
       for (const endpoint of DB_ENDPOINTS) {
         try {
@@ -198,9 +200,9 @@
             const val = await res.json();
             if (val) {
               state.data = val;
-              if (!state.data.clients) state.data.clients = [];
+              if (!state.data.clients) state.data.clients = defaultData.clients;
               if (!state.data.slots) state.data.slots = [];
-              if (!state.data.products) state.data.products = [];
+              if (!state.data.products) state.data.products = defaultData.products;
               localStorage.setItem('onipko_data', JSON.stringify(state.data));
             } else {
               saveToServer();
@@ -213,15 +215,10 @@
             render();
             return;
           }
-        } catch (e) {
-          // Пробуем следующий endpoint
-        }
+        } catch (e) {}
       }
-      const st = document.getElementById('statusText');
-      if (st) st.textContent = "Автономный режим (сохранено на телефоне)";
     }
 
-    // Первичная загрузка и автообновление каждые 10 секунд
     fetchServerData();
     setInterval(fetchServerData, 10000);
 
@@ -281,7 +278,8 @@
     }
 
     function addManualDistance() {
-      const val = parseInt(document.getElementById('manualMetersInput').value);
+      const input = document.getElementById('manualMetersInput');
+      const val = parseInt(input.value);
       if (!val || val <= 0) return alert("Введите число метров!");
 
       const client = state.data.clients.find(c => c.id === state.currentClientId);
@@ -289,8 +287,8 @@
         client.meters = (client.meters || 0) + val;
         saveToServer();
         closeDistanceModal();
+        input.value = '';
         render();
-        alert(`+${val} м добавлено к вашему маршруту!`);
       }
     }
 
@@ -303,7 +301,7 @@
       const dayName = daysOfWeek[dateObj.getDay()];
 
       if (dayName === "Воскресенье") {
-        return alert("Воскресенье — выходной. Выберите день с Пн по Сб.");
+        return alert("Воскресенье — выходной. Выберите Пн–Сб.");
       }
 
       for (let h = 7; h <= 23; h++) {
@@ -323,7 +321,6 @@
 
       saveToServer();
       render();
-      alert(`Сетка 07:00–23:00 на ${dayName} (${dateInput}) создана!`);
     }
 
     function assignClientToSlot(slotId, clientId) {
@@ -338,14 +335,13 @@
     function bookSlot(slotId) {
       const client = state.data.clients.find(c => c.id === state.currentClientId);
       if (client.balance <= 0) {
-        return alert("У вас 0 доступных занятий. Продлите абонемент в Telegram.");
+        return alert("У вас 0 доступных занятий. Напишите Кириллу в Telegram.");
       }
       const slot = state.data.slots.find(s => s.id === slotId);
       slot.bookedBy = client.id;
       slot.completed = false;
       saveToServer();
       render();
-      alert(`Запись оформлена на ${slot.date} в ${slot.time}! Списание произойдёт после тренировки.`);
     }
 
     function cancelSlot(slotId) {
@@ -368,6 +364,60 @@
       window.open(url, '_blank');
     }
 
+    function openAdminModal() {
+      if (state.currentView === 'admin') {
+        state.currentView = 'client_login';
+        render();
+        return;
+      }
+      const modal = document.getElementById('adminModal');
+      const input = document.getElementById('adminPinInput');
+      if (modal && input) {
+        input.value = '';
+        modal.classList.remove('hidden');
+        input.focus();
+      }
+    }
+
+    function closeAdminModal() {
+      const modal = document.getElementById('adminModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function submitAdminPin() {
+      const input = document.getElementById('adminPinInput');
+      if (input && input.value.trim() === ADMIN_PIN) {
+        closeAdminModal();
+        state.currentView = 'admin';
+        render();
+      } else {
+        alert("Неверный PIN-код!");
+      }
+    }
+
+    function loginClient() {
+      const input = document.getElementById('clientCodeInput');
+      if (!input) return;
+      const code = input.value.trim();
+      if (!code) return alert("Введите ваш персональный код!");
+
+      const client = state.data.clients.find(c => c.id === code);
+      if (client) {
+        state.currentClientId = client.id;
+        state.currentView = 'client_cabinet';
+        render();
+      } else {
+        alert("Ученик с кодом " + code + " не найден. Проверьте код или напишите тренеру.");
+      }
+    }
+
+    function logout() {
+      state.currentClientId = null;
+      state.currentView = 'client_login';
+      state.currentTab = 'booking';
+      render();
+    }
+
     function render() {
       const main = document.getElementById('appContent');
       if (!main) return;
@@ -381,7 +431,7 @@
         }
       }
 
-      // 1. Вход ученика
+      // 1. Экран входа ученика
       if (state.currentView === 'client_login' && state.currentTab === 'booking') {
         main.innerHTML = `
           <div class="my-auto py-8 text-center">
@@ -391,7 +441,7 @@
             <h2 class="text-xl font-black text-white">Кабинет пловца</h2>
             <p class="text-slate-400 text-xs mt-1 mb-5">Введите ваш персональный код доступа</p>
             <input id="clientCodeInput" type="text" placeholder="Например: 001" class="w-full text-center text-xl tracking-widest px-4 py-3.5 bg-slate-900 border border-slate-700 rounded-2xl font-black text-white mb-3 focus:border-red-500 focus:outline-none" />
-            <button onclick="loginClient()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 hover:from-blue-600 hover:to-red-500 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
+            <button type="button" onclick="loginClient()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 hover:from-blue-600 hover:to-red-500 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
               Войти в профиль
             </button>
           </div>
@@ -430,7 +480,7 @@
               </div>
             </div>
 
-            <!-- Авто-маршрут из Центра Владивостока -->
+            <!-- Маршрут из Центра Владивостока -->
             <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 rounded-2xl border border-blue-500/20 shadow-md">
               <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center gap-2">
@@ -439,7 +489,7 @@
                   </span>
                   <span class="text-xs font-extrabold text-white">Маршрут из Центра Владивостока</span>
                 </div>
-                <button onclick="openDistanceModal()" class="text-[10px] bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-2.5 py-1 rounded-lg font-bold border border-red-500/40 transition">
+                <button type="button" onclick="openDistanceModal()" class="text-[10px] bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-2.5 py-1 rounded-lg font-bold border border-red-500/40 transition">
                   + Мой заплыв
                 </button>
               </div>
@@ -447,7 +497,7 @@
               <div class="text-xs text-slate-300 mb-2">
                 Вы проплыли: <b class="text-white text-sm">${route.totalKm} км</b> (${client.meters || 0} м).
                 <p class="text-[11px] text-blue-300 mt-0.5">
-                  <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Сейчас вы на отметке: <b>${route.reached}</b>
+                  <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Сейчас на отметке: <b>${route.reached}</b>
                 </p>
               </div>
 
@@ -462,29 +512,29 @@
                   </div>
                 </div>
               ` : `
-                <p class="text-xs text-emerald-400 font-bold">🏆 Вы преодолели путь от Владивостока до самой Находки!</p>
+                <p class="text-xs text-emerald-400 font-bold">🏆 Вы преодолели путь до Находки!</p>
               `}
             </div>
 
             <!-- Чек-лист экипировки -->
             <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 block">
-                <i class="fa-solid fa-clipboard-check text-blue-400 mr-1"></i> Чек-лист перед выходом в бассейн:
+                <i class="fa-solid fa-clipboard-check text-blue-400 mr-1"></i> Чек-лист перед выходом:
               </span>
               <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="toggleCheck('glasses')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.glasses ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                <button type="button" onclick="toggleCheck('glasses')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.glasses ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
                   <span>🥽 Очки</span>
                   <i class="fa-solid ${state.checklist.glasses ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
                 </button>
-                <button onclick="toggleCheck('cap')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.cap ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                <button type="button" onclick="toggleCheck('cap')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.cap ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
                   <span>🏊‍♂️ Шапочка</span>
                   <i class="fa-solid ${state.checklist.cap ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
                 </button>
-                <button onclick="toggleCheck('suit')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.suit ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                <button type="button" onclick="toggleCheck('suit')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.suit ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
                   <span>🩱 Плавки / купальник</span>
                   <i class="fa-solid ${state.checklist.suit ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
                 </button>
-                <button onclick="toggleCheck('towel')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.towel ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                <button type="button" onclick="toggleCheck('towel')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.towel ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
                   <span>🧼 Полотенце / гель</span>
                   <i class="fa-solid ${state.checklist.towel ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
                 </button>
@@ -501,16 +551,16 @@
                     <div>
                       <span class="font-bold text-white">${s.date \vert{}\vert{} s.day},${s.time}</span>
                       <p class="text-[10px] ${s.completed ? 'text-slate-400 font-semibold' : 'text-red-400 font-bold'}">
-                        ${s.completed ? '✓ Проведено (списано)' : '● Запланировано (спишется после тренировки)'}
+                        ${s.completed ? '✓ Проведено (списано)' : '● Запланировано (спишется после)'}
                       </p>
                     </div>
                     <div class="flex items-center gap-1.5">
                       ${!s.completed && s.date ? `
-                        <button onclick="addToCalendar('${s.date}', '${s.time}')" class="bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-400/30 px-2 py-1 rounded-lg text-[10px] font-bold">
+                        <button type="button" onclick="addToCalendar('${s.date}', '${s.time}')" class="bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-400/30 px-2 py-1 rounded-lg text-[10px] font-bold">
                           <i class="fa-regular fa-bell text-red-400 mr-0.5"></i> -1ч
                         </button>
                       ` : ''}
-                      ${!s.completed ? `<button onclick="cancelSlot(${s.id})" class="text-red-400 font-semibold hover:underline">Отменить</button>` : ''}
+                      ${!s.completed ? `<button type="button" onclick="cancelSlot(${s.id})" class="text-red-400 font-semibold hover:underline">Отменить</button>` : ''}
                     </div>
                   </div>
                 `).join('')}
@@ -522,10 +572,10 @@
               <div class="flex justify-between items-center mb-1.5">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Свободные окна тренера</span>
                 <div class="flex gap-1 text-[10px]">
-                  <button onclick="state.slotFilterPeriod='all'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='all' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Все</button>
-                  <button onclick="state.slotFilterPeriod='morning'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='morning' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Утро</button>
-                  <button onclick="state.slotFilterPeriod='day'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='day' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">День</button>
-                  <button onclick="state.slotFilterPeriod='evening'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='evening' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Вечер</button>
+                  <button type="button" onclick="state.slotFilterPeriod='all'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='all' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Все</button>
+                  <button type="button" onclick="state.slotFilterPeriod='morning'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='morning' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Утро</button>
+                  <button type="button" onclick="state.slotFilterPeriod='day'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='day' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">День</button>
+                  <button type="button" onclick="state.slotFilterPeriod='evening'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='evening' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Вечер</button>
                 </div>
               </div>
 
@@ -537,7 +587,7 @@
                       <span class="font-bold text-slate-200">${s.date ? s.date + ' (' + s.day + ')' : s.day}</span>
                       <span class="block text-red-500 font-black text-sm">${s.time}</span>
                     </div>
-                    <button onclick="bookSlot(${s.id})" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm">
+                    <button type="button" onclick="bookSlot(${s.id})" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm">
                       Записаться
                     </button>
                   </div>
@@ -545,7 +595,7 @@
               </div>
             </div>
 
-            <button onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-1 font-semibold">
+            <button type="button" onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-1 font-semibold">
               Выйти из кабинета
             </button>
 
@@ -563,9 +613,9 @@
             <div class="flex justify-between items-center pb-2 border-b border-slate-800">
               <div>
                 <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">Панель тренера</span>
-                <h2 class="text-base font-black text-white">Управление графиком и пловцами</h2>
+                <h2 class="text-base font-black text-white">Управление графиком</h2>
               </div>
-              <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
+              <button type="button" onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
             </div>
 
             <!-- Генератор окон 07:00 - 23:00 -->
@@ -573,7 +623,7 @@
               <span class="font-bold text-blue-200 block">Открыть окна на день (07:00 - 23:00, Пн-Сб):</span>
               <div class="flex gap-2">
                 <input id="adminBatchDate" type="date" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white font-bold flex-1" />
-                <button onclick="generateDaySlots()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-md">
+                <button type="button" onclick="generateDaySlots()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-md">
                   + 17 слотов
                 </button>
               </div>
@@ -584,11 +634,11 @@
               <span class="font-bold text-white block">Добавить ученика:</span>
               <div class="grid grid-cols-2 gap-2">
                 <input id="newClientName" placeholder="ФИО ученика" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white" />
-                <input id="newClientCode" placeholder="Код входа (001)" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
+                <input id="newClientCode" placeholder="Код (001)" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
               </div>
               <div class="flex gap-2">
                 <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
-                <button onclick="addClient()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2 shadow-sm">Добавить</button>
+                <button type="button" onclick="addClient()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2 shadow-sm">Добавить</button>
               </div>
             </div>
 
@@ -603,7 +653,7 @@
                       <div>
                         <span class="font-bold text-white">${s.date || s.day} | ${s.time}</span>${s.completed ? '<span class="ml-2 text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold">Проведено (списано)</span>' : ''}
                       </div>
-                      <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+                      <button type="button" onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -620,7 +670,7 @@
               </div>
             </div>
 
-            <!-- Список учеников и наплавленный километраж -->
+            <!-- Список учеников -->
             <div>
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Ученики и километраж:</span>
               <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
@@ -631,10 +681,10 @@
                       <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
                     </div>
                     <div class="flex items-center gap-1">
-                      <button onclick="addCoachMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]" title="Добавить метры">+Метры</button>
-                      <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
-                      <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
-                      <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+                      <button type="button" onclick="addCoachMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]">+Метры</button>
+                      <button type="button" onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
+                      <button type="button" onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
+                      <button type="button" onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
                     </div>
                   </div>
                 `).join('')}
@@ -686,47 +736,12 @@
     function addCoachMeters(clientId) {
       const client = state.data.clients.find(c => c.id === clientId);
       if (!client) return;
-      const meters = prompt(`Сколько метров проплыл ${client.name} на тренировке? (например: 1500):`);
+      const meters = prompt(`Сколько метров проплыл ${client.name}? (например: 1500):`);
       if (meters && parseInt(meters) > 0) {
         client.meters = (client.meters || 0) + parseInt(meters);
         saveToServer();
         render();
-        alert(`${meters} м успешно зачислено!`);
       }
-    }
-
-    function loginClient() {
-      const code = document.getElementById('clientCodeInput').value.trim();
-      const client = state.data.clients.find(c => c.id === code);
-      if (client) {
-        state.currentClientId = client.id;
-        state.currentView = 'client_cabinet';
-        render();
-      } else {
-        alert("Ученик с таким кодом не найден. Проверьте код или напишите тренеру.");
-      }
-    }
-
-    function toggleAdminAuth() {
-      if (state.currentView === 'admin') {
-        state.currentView = 'client_login';
-        render();
-        return;
-      }
-      const pin = prompt("Введите PIN-код тренера:");
-      if (pin === ADMIN_PIN) {
-        state.currentView = 'admin';
-        render();
-      } else if (pin !== null) {
-        alert("Неверный PIN-код!");
-      }
-    }
-
-    function logout() {
-      state.currentClientId = null;
-      state.currentView = 'client_login';
-      state.currentTab = 'booking';
-      render();
     }
 
     function addClient() {
@@ -763,6 +778,9 @@
       saveToServer();
       render();
     }
+
+    // Первичный рендер
+    render();
   </script>
 </body>
 </html>
