@@ -145,17 +145,16 @@
           </div>
         </div>
 
-        <!-- Записи ученика (с возможностью отмены) -->
+        <!-- Записи ученика -->
         <div>
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши активные тренировки:</span>
           <div id="cabMyBookingsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
         </div>
 
-        <!-- Свободные окна тренера (с возможностью записаться) -->
+        <!-- Свободные окна тренера -->
         <div>
           <div class="flex justify-between items-center mb-1.5">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Свободное время тренера (Пн–Сб)</span>
-            <!-- Фильтр по дням недели -->
             <div class="flex gap-1 text-[10px]">
               <button type="button" onclick="filterFreeSlots('all')" class="px-2 py-0.5 rounded-md font-bold bg-red-600 text-white" id="filterBtnAll">Все</button>
               <button type="button" onclick="filterFreeSlots('Пн')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnПн">Пн</button>
@@ -203,13 +202,13 @@
           </div>
         </div>
 
-        <!-- Список учеников с кнопкой изменения профиля -->
+        <!-- Список учеников -->
         <div>
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Список учеников:</span>
           <div id="adminClientsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Добавление нового товара в магазин -->
+        <!-- Добавление товара в магазин -->
         <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2.5">
           <span class="font-bold text-blue-200 block text-sm">Добавить товар в магазин:</span>
           <div class="grid grid-cols-2 gap-2">
@@ -421,6 +420,7 @@
     let targetSlotTime = null;
     let currentFreeSlotsFilter = 'all';
     let tempNewProdImg = '';
+    let activeInternalView = 'login'; // 'login', 'cabinet', 'admin'
 
     const ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
@@ -439,7 +439,7 @@
       clients: [
         { id: "001", name: "Первый ученик", balance: 8, meters: 0, photo: "" }
       ],
-      weeklySchedule: {}, // { "Пн_08:00": "001" }
+      weeklySchedule: {},
       deductedHistory: {},
       products: [
         {
@@ -455,7 +455,7 @@
     };
 
     try {
-      const local = JSON.parse(localStorage.getItem('onipko_cache_v4'));
+      const local = JSON.parse(localStorage.getItem('onipko_cache_v5'));
       if (local && local.clients) appData = local;
     } catch(e) {}
 
@@ -471,7 +471,7 @@
             if (!appData.weeklySchedule) appData.weeklySchedule = {};
             if (!appData.deductedHistory) appData.deductedHistory = {};
             if (!appData.products) appData.products = [];
-            localStorage.setItem('onipko_cache_v4', JSON.stringify(appData));
+            localStorage.setItem('onipko_cache_v5', JSON.stringify(appData));
           } else {
             pushData();
           }
@@ -483,7 +483,7 @@
 
     async function pushData() {
       try {
-        localStorage.setItem('onipko_cache_v4', JSON.stringify(appData));
+        localStorage.setItem('onipko_cache_v5', JSON.stringify(appData));
         await fetch(DB_URL, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -531,22 +531,43 @@
       if (hasDeductions) pushData();
     }
 
+    // НАДЕЖНОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     function switchMainTab(tab) {
       const btnB = document.getElementById('tabBtnBooking');
       const btnS = document.getElementById('tabBtnShop');
       const viewS = document.getElementById('viewShop');
+      const viewL = document.getElementById('viewLogin');
+      const viewC = document.getElementById('viewCabinet');
+      const viewA = document.getElementById('viewAdmin');
       
       if (tab === 'booking') {
         btnB.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
         btnS.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        
         viewS.classList.add('hidden');
-        refreshActiveView();
+        
+        if (activeInternalView === 'admin') {
+          viewL.classList.add('hidden');
+          viewC.classList.add('hidden');
+          viewA.classList.remove('hidden');
+          renderAdmin();
+        } else if (activeInternalView === 'cabinet' && currentClientId) {
+          viewL.classList.add('hidden');
+          viewA.classList.add('hidden');
+          viewC.classList.remove('hidden');
+          renderCabinet();
+        } else {
+          viewC.classList.add('hidden');
+          viewA.classList.add('hidden');
+          viewL.classList.remove('hidden');
+        }
       } else {
         btnS.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
         btnB.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
-        document.getElementById('viewLogin').classList.add('hidden');
-        document.getElementById('viewCabinet').classList.add('hidden');
-        document.getElementById('viewAdmin').classList.add('hidden');
+        
+        viewL.classList.add('hidden');
+        viewC.classList.add('hidden');
+        viewA.classList.add('hidden');
         viewS.classList.remove('hidden');
         renderClientShop();
       }
@@ -560,6 +581,7 @@
       const client = appData.clients.find(c => c.id === code);
       if (client) {
         currentClientId = client.id;
+        activeInternalView = 'cabinet';
         document.getElementById('viewLogin').classList.add('hidden');
         document.getElementById('viewCabinet').classList.remove('hidden');
         renderCabinet();
@@ -663,7 +685,7 @@
 
       const bookingsCont = document.getElementById('cabMyBookingsList');
       if (mySchedule.length === 0) {
-        bookingsCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">У вас пока нет активных тренировок. Запишитесь на свободное время ниже!</p>';
+        bookingsCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">У вас пока нет активных тренировок. Запишитесь ниже!</p>';
       } else {
         bookingsCont.innerHTML = mySchedule.map(item => `
           <div class="flex justify-between items-center bg-blue-950/40 border border-blue-500/40 p-2.5 rounded-xl text-xs">
@@ -678,7 +700,6 @@
         `).join('');
       }
 
-      // Свободные окна тренера
       renderFreeSlotsList();
     }
 
@@ -741,7 +762,7 @@
       pushData();
       renderCabinet();
       const [day, time] = key.split('_');
-      alert(`Вы успешно записаны на ${day} в ${time}! Списание произойдёт после проведения тренировки.`);
+      alert(`Вы записались на ${day} в ${time}! Списание произойдёт после проведения тренировки.`);
     }
 
     function cancelStudentBooking(key) {
@@ -782,6 +803,7 @@
       const pin = document.getElementById('adminPinInput').value.trim();
       if (pin === COACH_PIN) {
         closeAdminModal();
+        activeInternalView = 'admin';
         document.getElementById('viewLogin').classList.add('hidden');
         document.getElementById('viewCabinet').classList.add('hidden');
         document.getElementById('viewAdmin').classList.remove('hidden');
@@ -792,7 +814,6 @@
     }
 
     function renderAdmin() {
-      // Список клиентов
       const clientsCont = document.getElementById('adminClientsList');
       clientsCont.innerHTML = appData.clients.map(c => `
         <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
@@ -813,11 +834,9 @@
         </div>
       `).join('');
 
-      // Список товаров в админке
       renderAdminProducts();
     }
 
-    // Редактирование профиля ученика
     function openEditClientModal(id) {
       const c = appData.clients.find(x => x.id === id);
       if (!c) return;
@@ -1140,7 +1159,7 @@
       `).join('');
     }
 
-    // === ДРУГИЕ ОПЕРАЦИИ ТРЕНЕРА ===
+    // === ОПЕРАЦИИ ТРЕНЕРА ===
 
     function addNewClient() {
       const name = document.getElementById('newUName').value.trim();
@@ -1211,17 +1230,18 @@
 
     function logout() {
       currentClientId = null;
+      activeInternalView = 'login';
       document.getElementById('viewCabinet').classList.add('hidden');
       document.getElementById('viewAdmin').classList.add('hidden');
       document.getElementById('viewLogin').classList.remove('hidden');
     }
 
     function refreshActiveView() {
-      if (currentClientId) renderCabinet();
-      else if (!document.getElementById('viewAdmin').classList.contains('hidden')) renderAdmin();
+      if (activeInternalView === 'cabinet' && currentClientId) renderCabinet();
+      else if (activeInternalView === 'admin') renderAdmin();
     }
 
-    // Запуск синхронизации
+    // Запуск
     syncData();
     setInterval(syncData, 8000);
   </script>
