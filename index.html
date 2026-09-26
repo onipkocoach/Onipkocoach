@@ -2,17 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Тренер по плаванию | Кирилл Онипко</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Проверенный Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -31,64 +26,250 @@
           <h1 class="text-2xl font-black tracking-tight leading-tight">Кирилл Онипко</h1>
           <p class="text-blue-200 text-xs font-medium">Персональный тренер по плаванию</p>
         </div>
-        <button onclick="toggleAdminAuth()" class="bg-black/30 hover:bg-red-600/80 p-2.5 rounded-full transition text-white border border-white/10" title="Тренер">
-          <i class="fa-solid fa-lock text-xs"></i>
+        <button type="button" onclick="openAdminModal()" class="bg-black/40 active:scale-90 p-3 rounded-full transition text-white border border-white/10">
+          <i class="fa-solid fa-lock text-sm"></i>
         </button>
       </div>
 
       <div class="mt-3 pt-3 border-t border-white/10 flex gap-2">
-        <a href="https://vk.ru/club239758541" target="_blank" class="flex-1 bg-blue-950/60 hover:bg-blue-800/80 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold border border-blue-400/20 transition">
+        <a href="https://vk.ru/club239758541" target="_blank" class="flex-1 bg-blue-950/60 active:scale-95 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold border border-blue-400/20 transition">
           <i class="fa-brands fa-vk text-sm text-blue-400"></i> VK
         </a>
-        <a href="https://t.me/kkkkk_ooooo" target="_blank" class="flex-1 bg-red-950/60 hover:bg-red-800/80 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold border border-red-400/20 transition">
+        <a href="https://t.me/kkkkk_ooooo" target="_blank" class="flex-1 bg-red-950/60 active:scale-95 py-1.5 px-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold border border-red-400/20 transition">
           <i class="fa-brands fa-telegram text-sm text-red-400"></i> Telegram
         </a>
       </div>
     </header>
 
     <!-- Вкладки навигации -->
-    <nav id="clientTabs" class="flex border-b border-slate-800 bg-slate-900/90 text-xs font-bold text-slate-400">
-      <button onclick="switchTab('booking')" id="tabBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
+    <nav class="flex border-b border-slate-800 bg-slate-900/90 text-xs font-bold text-slate-400">
+      <button type="button" onclick="switchMainTab('booking')" id="tabBtnBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-person-swimming"></i> Кабинет и запись
       </button>
-      <button onclick="switchTab('shop')" id="tabShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
+      <button type="button" onclick="switchMainTab('shop')" id="tabBtnShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-bag-shopping"></i> Экипировка
       </button>
     </nav>
 
-    <!-- Индикатор синхронизации -->
-    <div id="loadingStatus" class="p-2 bg-blue-950/80 text-blue-300 text-[11px] font-semibold text-center flex items-center justify-center gap-2 border-b border-blue-900/40">
-      <i class="fa-solid fa-circle-notch fa-spin text-red-500"></i> Подключение к онлайн-базе...
+    <!-- Основной контент -->
+    <main class="p-4 flex-1 flex flex-col justify-between">
+
+      <!-- 1. Экран входа ученика -->
+      <section id="viewLogin" class="my-auto py-6 text-center">
+        <div class="w-16 h-16 bg-blue-900/40 border border-blue-500/30 text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg">
+          <i class="fa-solid fa-person-swimming"></i>
+        </div>
+        <h2 class="text-xl font-black text-white">Кабинет пловца</h2>
+        <p class="text-slate-400 text-xs mt-1 mb-5">Введите ваш персональный код доступа</p>
+        <input id="clientCodeInput" type="text" placeholder="Например: 001" class="w-full text-center text-xl tracking-widest px-4 py-3.5 bg-slate-900 border border-slate-700 rounded-2xl font-black text-white mb-3 focus:border-red-500 focus:outline-none" />
+        <button type="button" onclick="handleClientLogin()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 active:scale-95 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
+          Войти в профиль
+        </button>
+      </section>
+
+      <!-- 2. Личный кабинет ученика -->
+      <section id="viewCabinet" class="hidden space-y-4">
+        <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl border border-blue-900/50 flex justify-between items-center shadow-md">
+          <div>
+            <span class="text-[10px] text-red-400 font-extrabold uppercase">Пловец</span>
+            <h2 id="cabClientName" class="text-base font-black text-white leading-tight">Ученик</h2>
+            <p class="text-[11px] text-slate-400">Код: <b id="cabClientCode">001</b></p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 font-semibold uppercase">Баланс</span>
+            <p class="text-2xl font-black text-red-500 leading-none"><span id="cabClientBal">0</span> <span class="text-xs font-normal text-slate-300">зан.</span></p>
+            <span class="text-[9px] text-blue-300 block mt-1">*Списание после тренировки</span>
+          </div>
+        </div>
+
+        <!-- Владивостокский маршрут -->
+        <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 rounded-2xl border border-blue-500/20 shadow-md">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-car-side"></i>
+              </span>
+              <span class="text-xs font-extrabold text-white">Маршрут из Центра Владивостока</span>
+            </div>
+            <button type="button" onclick="openDistanceModal()" class="text-[10px] bg-red-600/30 text-red-300 px-2.5 py-1 rounded-lg font-bold border border-red-500/40">
+              + Мой заплыв
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-300 mb-2">
+            Вы проплыли: <b id="cabTotalKm" class="text-white text-sm">0.0 км</b> (<span id="cabTotalMeters">0</span> м).
+            <p class="text-[11px] text-blue-300 mt-0.5">
+              <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Сейчас на отметке: <b id="cabReachedPoint">Центральная площадь</b>
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-[10px] font-bold">
+              <span id="cabNextPoint" class="text-slate-400">След. цель: СК «Чемпион»</span>
+              <span id="cabLeftKm" class="text-red-400">ещё 3.5 км</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
+              <div id="cabProgressBar" class="bg-gradient-to-r from-blue-500 to-red-500 h-full rounded-full transition-all" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Чек-лист экипировки -->
+        <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 block">
+            <i class="fa-solid fa-clipboard-check text-blue-400 mr-1"></i> Чек-лист перед выходом:
+          </span>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" onclick="toggleCheckItem(this)" class="p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-left flex items-center justify-between">
+              <span>🥽 Очки</span> <i class="fa-regular fa-circle text-[10px]"></i>
+            </button>
+            <button type="button" onclick="toggleCheckItem(this)" class="p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-left flex items-center justify-between">
+              <span>🏊‍♂️ Шапочка</span> <i class="fa-regular fa-circle text-[10px]"></i>
+            </button>
+            <button type="button" onclick="toggleCheckItem(this)" class="p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-left flex items-center justify-between">
+              <span>🩱 Плавки / костюм</span> <i class="fa-regular fa-circle text-[10px]"></i>
+            </button>
+            <button type="button" onclick="toggleCheckItem(this)" class="p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-left flex items-center justify-between">
+              <span>🧼 Полотенце</span> <i class="fa-regular fa-circle text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Записи клиента -->
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши тренировки:</span>
+          <div id="cabMySlotsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+        </div>
+
+        <!-- Свободные окна тренера -->
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Свободное время тренера (Пн–Сб)</span>
+          <div id="cabFreeSlotsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+        <button type="button" onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-2 font-semibold">
+          Выйти из кабинета
+        </button>
+      </section>
+
+      <!-- 3. Панель тренера (Admin) -->
+      <section id="viewAdmin" class="hidden space-y-4">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+          <div>
+            <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">Панель тренера</span>
+            <h2 class="text-base font-black text-white">Управление графиком и учениками</h2>
+          </div>
+          <button type="button" onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
+        </div>
+
+        <!-- Генератор окон 07:00 - 23:00 -->
+        <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2">
+          <span class="font-bold text-blue-200 block">Открыть сетку окон (07:00 - 23:00, Пн-Сб):</span>
+          <div class="flex gap-2">
+            <input id="adminDateInput" type="date" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white font-bold flex-1" />
+            <button type="button" onclick="generateBatchSlots()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-md">
+              + 17 окон
+            </button>
+          </div>
+        </div>
+
+        <!-- Добавить ученика -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-xs space-y-2">
+          <span class="font-bold text-white block">Добавить нового ученика:</span>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="newUName" placeholder="ФИО ученика" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white" />
+            <input id="newUCode" placeholder="Код (например: 002)" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
+          </div>
+          <div class="flex gap-2">
+            <input id="newUBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
+            <button type="button" onclick="addNewClient()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2 shadow-sm">Добавить</button>
+          </div>
+        </div>
+
+        <!-- Список окон и закрепление -->
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Окна и закрепление учеников:</span>
+          <div id="adminSlotsList" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Список учеников -->
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Список учеников:</span>
+          <div id="adminClientsList" class="space-y-1.5 max-h-44 overflow-y-auto pr-1"></div>
+        </div>
+      </section>
+
+      <!-- 4. Витрина товаров -->
+      <section id="viewShop" class="hidden space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-sm font-black text-white">Магазин экипировки</h2>
+            <p class="text-[11px] text-slate-400">Рекомендовано тренером</p>
+          </div>
+          <a href="https://vk.ru/club239758541" target="_blank" class="text-xs text-red-500 font-bold hover:underline">
+            Каталог VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+          </a>
+        </div>
+        <div class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+            <img src="https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80" class="w-16 h-16 rounded-xl object-cover bg-slate-950 flex-shrink-0 border border-slate-800">
+            <div class="flex-1 min-w-0">
+              <span class="text-[9px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-extrabold uppercase">ОЧКИ</span>
+              <h3 class="font-bold text-white text-xs truncate mt-0.5">Mad Wave Alien</h3>
+              <p class="text-[11px] text-slate-400 line-clamp-1">Стартово-тренировочные зеркальные очки.</p>
+              <div class="flex justify-between items-center mt-1.5">
+                <span class="font-black text-red-500 text-sm">3 490 ₽</span>
+                <a href="https://t.me/kkkkk_ooooo?text=Здравствуйте,%20хочу%20заказать%20очки%20Mad%20Wave%20Alien" target="_blank" class="bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-lg">
+                  Заказать
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Модалка ввода PIN тренера -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-5 text-center relative shadow-2xl">
+        <button type="button" onclick="closeAdminModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="w-12 h-12 bg-red-950/60 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-red-400">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h3 class="text-base font-black text-white mb-1">Панель тренера</h3>
+        <p class="text-xs text-slate-400 mb-4">Введите PIN-код тренера</p>
+        <input id="adminPinInput" type="password" maxlength="4" placeholder="••••" class="w-full text-center text-2xl tracking-widest p-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-black mb-3 focus:outline-none focus:border-red-500" />
+        <button type="button" onclick="checkAdminPin()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition text-xs shadow-lg">
+          Войти в панель
+        </button>
+      </div>
     </div>
 
-    <!-- Основной экран -->
-    <main class="p-4 flex-1 flex flex-col justify-between" id="appContent">
-      <!-- Контент формируется динамически -->
-    </main>
+    <!-- Модалка добавления метров -->
+    <div id="distModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 relative shadow-2xl">
+        <button type="button" onclick="closeDistanceModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-sm font-bold text-white mb-2">Внести самостоятельный заплыв</h3>
+        <p class="text-[11px] text-slate-400 mb-3">Метры добавятся в ваш маршрут из Центра Владивостока</p>
+        <input id="modalMetersInput" type="number" placeholder="Например: 1200 м" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-center mb-3 focus:outline-none focus:border-red-500" />
+        <button type="button" onclick="saveManualMeters()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow-lg">
+          Сохранить дистанцию
+        </button>
+      </div>
+    </div>
 
   </div>
 
   <script>
-    const ADMIN_PIN = "1234";
-    const TG_USERNAME = "kkkkk_ooooo";
+    const COACH_PIN = "1234";
+    const DB_URL = "https://onipko-coach-default-rtdb.europe-west1.firebasedatabase.app/app_data.json";
 
-    // Ваши рабочие ключи Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBeZtO1OYVQ0zrCXmpgCxiw1E1M8uX5Z-E",
-      authDomain: "onipko-coach.firebaseapp.com",
-      databaseURL: "https://onipko-coach-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "onipko-coach",
-      storageBucket: "onipko-coach.firebasestorage.app",
-      messagingSenderId: "560983610",
-      appId: "1:560983610:web:22ba35013281d014b14f03",
-      measurementId: "G-XN1D9SXGXM"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const dbRef = db.ref('app_data');
-
-    const VLADIVOSTOK_ROUTES = [
+    const ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
       { name: "Вторая Речка (Автовокзал)", km: 8.0 },
       { name: "СК «Чемпион» / фабрика «Заря»", km: 13.0 },
@@ -101,158 +282,307 @@
       { name: "г. Находка", km: 175.0 }
     ];
 
-    let state = {
-      data: {
-        clients: [],
-        slots: [],
-        categories: ["Очки", "Шапочки", "Инвентарь"],
-        products: [
-          {
-            id: 101,
-            category: "Очки",
-            title: "Mad Wave Alien",
-            price: 3490,
-            desc: "Стартово-тренировочные очки с зеркальным напылением и идеальной гидродинамикой.",
-            image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80"
-          }
-        ]
-      },
-      currentView: 'client_login',
-      currentTab: 'booking',
-      currentClientId: null,
-      slotFilterPeriod: 'all',
-      checklist: { glasses: false, cap: false, suit: false, towel: false }
+    let appData = {
+      clients: [
+        { id: "001", name: "Первый ученик", balance: 8, meters: 0 }
+      ],
+      slots: []
     };
 
-    // Списание тренировок строго после завершения по времени
-    function processCompletedSessions() {
-      if (!state.data.slots || !state.data.slots.length) return false;
-      const now = new Date();
-      let hasChanges = false;
+    // Загрузка из локального кэша
+    try {
+      const local = JSON.parse(localStorage.getItem('onipko_cache'));
+      if (local && local.clients && local.clients.length) appData = local;
+    } catch(e) {}
 
-      state.data.slots.forEach(slot => {
+    let currentClientId = null;
+
+    // Фоновая синхронизация с Firebase (через стандартный REST без зависаний)
+    async function syncData() {
+      try {
+        const res = await fetch(DB_URL, { cache: 'no-store' });
+        if (res.ok) {
+          const cloud = await res.json();
+          if (cloud && cloud.clients) {
+            appData = cloud;
+            localStorage.setItem('onipko_cache', JSON.stringify(appData));
+          } else {
+            pushData();
+          }
+          checkExpiredSessions();
+          refreshActiveView();
+        }
+      } catch(e) {}
+    }
+
+    async function pushData() {
+      try {
+        localStorage.setItem('onipko_cache', JSON.stringify(appData));
+        await fetch(DB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appData)
+        });
+      } catch(e) {}
+    }
+
+    // Автоматическое списание тренировок строго после завершения по времени
+    function checkExpiredSessions() {
+      if (!appData.slots || !appData.slots.length) return;
+      const now = new Date();
+      let changed = false;
+
+      appData.slots.forEach(slot => {
         if (slot.bookedBy && !slot.completed && slot.date && slot.time) {
-          const [hours, minutes] = slot.time.split(':').map(Number);
-          const [year, month, day] = slot.date.split('-').map(Number);
-          const sessionEnd = new Date(year, month - 1, day, hours, minutes);
+          const [h, m] = slot.time.split(':').map(Number);
+          const [y, mon, d] = slot.date.split('-').map(Number);
+          const sessionEnd = new Date(y, mon - 1, d, h, m);
 
           if (now >= sessionEnd) {
             slot.completed = true;
-            const client = state.data.clients.find(c => c.id === slot.bookedBy);
-            if (client) {
-              client.balance = Math.max(0, (client.balance || 0) - 1);
-            }
-            hasChanges = true;
+            const cl = appData.clients.find(c => c.id === slot.bookedBy);
+            if (cl) cl.balance = Math.max(0, (cl.balance || 0) - 1);
+            changed = true;
           }
         }
       });
 
-      return hasChanges;
+      if (changed) pushData();
     }
 
-    // Подключение к серверу
-    dbRef.on('value', (snapshot) => {
-      const val = snapshot.val();
-      const loader = document.getElementById('loadingStatus');
-      if (loader) loader.classList.add('hidden');
-
-      if (val) {
-        state.data = val;
-        if (!state.data.clients) state.data.clients = [];
-        if (!state.data.slots) state.data.slots = [];
-        if (!state.data.products) state.data.products = [];
-
-        if (processCompletedSessions()) {
-          saveToServer();
-        }
-      } else {
-        dbRef.set(state.data);
-      }
-      render();
-    }, (error) => {
-      console.error(error);
-      const loader = document.getElementById('loadingStatus');
-      if (loader) loader.innerHTML = `<span class="text-amber-400">Включите базу данных в Firebase Console</span>`;
-    });
-
-    setInterval(() => {
-      if (processCompletedSessions()) {
-        saveToServer();
-        render();
-      }
-    }, 60000);
-
-    function saveToServer() {
-      dbRef.set(state.data);
-    }
-
-    function switchTab(tab) {
-      state.currentTab = tab;
-      const tabBooking = document.getElementById('tabBooking');
-      const tabShop = document.getElementById('tabShop');
+    function switchMainTab(tab) {
+      const btnB = document.getElementById('tabBtnBooking');
+      const btnS = document.getElementById('tabBtnShop');
+      const viewS = document.getElementById('viewShop');
+      
       if (tab === 'booking') {
-        tabBooking.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
-        tabShop.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        btnB.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
+        btnS.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        viewS.classList.add('hidden');
+        refreshActiveView();
       } else {
-        tabShop.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
-        tabBooking.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        btnS.className = "flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 font-bold transition flex items-center justify-center gap-1.5";
+        btnB.className = "flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 font-semibold hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        document.getElementById('viewLogin').classList.add('hidden');
+        document.getElementById('viewCabinet').classList.add('hidden');
+        document.getElementById('viewAdmin').classList.add('hidden');
+        viewS.classList.remove('hidden');
       }
-      render();
     }
 
-    function calculateRouteProgress(totalMeters) {
-      const totalKm = (totalMeters || 0) / 1000;
+    function handleClientLogin() {
+      const input = document.getElementById('clientCodeInput');
+      const code = input ? input.value.trim() : '';
+      if (!code) return alert("Введите код доступа!");
+
+      const client = appData.clients.find(c => c.id === code);
+      if (client) {
+        currentClientId = client.id;
+        document.getElementById('viewLogin').classList.add('hidden');
+        document.getElementById('viewCabinet').classList.remove('hidden');
+        renderCabinet();
+      } else {
+        alert("Ученик с кодом " + code + " не найден. Напишите тренеру.");
+      }
+    }
+
+    function renderCabinet() {
+      const client = appData.clients.find(c => c.id === currentClientId);
+      if (!client) return;
+
+      document.getElementById('cabClientName').textContent = client.name;
+      document.getElementById('cabClientCode').textContent = client.id;
+      document.getElementById('cabClientBal').textContent = client.balance;
+
+      const totalKm = ((client.meters || 0) / 1000).toFixed(1);
+      document.getElementById('cabTotalKm').textContent = totalKm + " км";
+      document.getElementById('cabTotalMeters').textContent = client.meters || 0;
+
       let reached = "Центральная площадь";
-      let next = VLADIVOSTOK_ROUTES[0];
+      let next = ROUTES[0];
       let prevKm = 0;
 
-      for (let i = 0; i < VLADIVOSTOK_ROUTES.length; i++) {
-        if (totalKm >= VLADIVOSTOK_ROUTES[i].km) {
-          reached = VLADIVOSTOK_ROUTES[i].name;
-          prevKm = VLADIVOSTOK_ROUTES[i].km;
-          next = VLADIVOSTOK_ROUTES[i + 1] || null;
+      for (let i = 0; i < ROUTES.length; i++) {
+        if (totalKm >= ROUTES[i].km) {
+          reached = ROUTES[i].name;
+          prevKm = ROUTES[i].km;
+          next = ROUTES[i + 1] || null;
         } else {
-          next = VLADIVOSTOK_ROUTES[i];
+          next = ROUTES[i];
           break;
         }
       }
 
-      let percent = 100;
-      let toNextKm = 0;
+      document.getElementById('cabReachedPoint').textContent = reached;
       if (next) {
-        const span = next.km - prevKm;
-        const progressInSpan = totalKm - prevKm;
-        percent = Math.min(100, Math.max(0, Math.round((progressInSpan / span) * 100)));
-        toNextKm = (next.km - totalKm).toFixed(1);
+        document.getElementById('cabNextPoint').textContent = "След. цель: " + next.name;
+        const left = (next.km - totalKm).toFixed(1);
+        document.getElementById('cabLeftKm').textContent = "ещё " + left + " км";
+        const percent = Math.min(100, Math.max(0, Math.round(((totalKm - prevKm) / (next.km - prevKm)) * 100)));
+        document.getElementById('cabProgressBar').style.width = percent + "%";
+      } else {
+        document.getElementById('cabNextPoint').textContent = "ФИНИШ: г. Находка!";
+        document.getElementById('cabLeftKm').textContent = "🏆 Завершено";
+        document.getElementById('cabProgressBar').style.width = "100%";
       }
 
-      return { totalKm: totalKm.toFixed(1), reached, next, percent, toNextKm };
+      const mySlots = appData.slots.filter(s => s.bookedBy === client.id);
+      const myCont = document.getElementById('cabMySlotsList');
+      if (mySlots.length === 0) {
+        myCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">Нет активных тренировок.</p>';
+      } else {
+        myCont.innerHTML = mySlots.map(s => `
+          <div class="flex justify-between items-center ${s.completed ? 'bg-slate-900 border-slate-800 opacity-60' : 'bg-blue-950/40 border-blue-500/40'} border p-2.5 rounded-xl text-xs">
+            <div>
+              <span class="font-bold text-white">${s.date || s.day}, ${s.time}</span>
+              <p class="text-[10px] ${s.completed ? 'text-slate-400 font-semibold' : 'text-red-400 font-bold'}">
+                ${s.completed ? '✓ Проведено (списано)' : '● Запланировано (спишется после тренировки)'}
+              </p>
+            </div>
+            ${!s.completed ? `<button type="button" onclick="cancelMySlot(${s.id})" class="text-red-400 font-semibold hover:underline">Отменить</button>` : ''}
+          </div>
+        `).join('');
+      }
+
+      const freeSlots = appData.slots.filter(s => !s.bookedBy && !s.completed);
+      const freeCont = document.getElementById('cabFreeSlotsList');
+      if (freeSlots.length === 0) {
+        freeCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Нет свободных окон.</p>';
+      } else {
+        freeCont.innerHTML = freeSlots.map(s => `
+          <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs hover:border-blue-500 transition">
+            <div>
+              <span class="font-bold text-slate-200">${s.date ? s.date + ' (' + s.day + ')' : s.day}</span>
+              <span class="block text-red-500 font-black text-sm">${s.time}</span>
+            </div>
+            <button type="button" onclick="bookMySlot(${s.id})" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition">
+              Записаться
+            </button>
+          </div>
+        `).join('');
+      }
     }
 
-    function toggleCheck(item) {
-      state.checklist[item] = !state.checklist[item];
-      render();
+    function bookMySlot(slotId) {
+      const client = appData.clients.find(c => c.id === currentClientId);
+      if (client.balance <= 0) return alert("У вас 0 доступных занятий. Продлите абонемент через Telegram.");
+      const slot = appData.slots.find(s => s.id === slotId);
+      if (!slot) return;
+      slot.bookedBy = client.id;
+      slot.completed = false;
+      pushData();
+      renderCabinet();
+      alert(`Вы записаны на ${slot.date} в ${slot.time}! Списание произойдёт после проведения тренировки.`);
     }
 
-    function generateDaySlots() {
-      const dateInput = document.getElementById('adminBatchDate').value;
-      if (!dateInput) return alert("Выберите дату!");
+    function cancelMySlot(slotId) {
+      const slot = appData.slots.find(s => s.id === slotId);
+      if (!slot) return;
+      slot.bookedBy = null;
+      slot.completed = false;
+      pushData();
+      renderCabinet();
+    }
+
+    function toggleCheckItem(btn) {
+      const icon = btn.querySelector('i');
+      if (icon.classList.contains('fa-circle')) {
+        icon.className = "fa-solid fa-check text-red-500";
+        btn.classList.add('border-red-500', 'bg-red-950/40', 'text-white', 'font-bold');
+      } else {
+        icon.className = "fa-regular fa-circle text-[10px]";
+        btn.classList.remove('border-red-500', 'bg-red-950/40', 'text-white', 'font-bold');
+      }
+    }
+
+    function openAdminModal() {
+      const modal = document.getElementById('adminModal');
+      const input = document.getElementById('adminPinInput');
+      input.value = '';
+      modal.classList.remove('hidden');
+      input.focus();
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    function checkAdminPin() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (pin === COACH_PIN) {
+        closeAdminModal();
+        document.getElementById('viewLogin').classList.add('hidden');
+        document.getElementById('viewCabinet').classList.add('hidden');
+        document.getElementById('viewAdmin').classList.remove('hidden');
+        renderAdmin();
+      } else {
+        alert("Неверный PIN-код!");
+      }
+    }
+
+    function renderAdmin() {
+      const sortedSlots = [...appData.slots].sort((a,b) => (a.date || '') > (b.date || '') ? 1 : -1);
+      const slotsCont = document.getElementById('adminSlotsList');
+
+      if (sortedSlots.length === 0) {
+        slotsCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Окон нет. Добавьте их выше.</p>';
+      } else {
+        slotsCont.innerHTML = sortedSlots.map(s => `
+          <div class="bg-slate-900 border ${s.completed ? 'border-slate-800 opacity-60' : s.bookedBy ? 'border-red-500/50' : 'border-slate-800'} p-2.5 rounded-xl text-xs space-y-1.5">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="font-bold text-white">${s.date || s.day} | ${s.time}</span>
+                ${s.completed ? '<span class="ml-2 text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold">Проведено (списано)</span>' : ''}
+              </div>
+              <button type="button" onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Пловец:</span>
+              <select onchange="assignSlotCoach(${s.id}, this.value)" class="p-1.5 border border-slate-700 rounded-lg bg-slate-950 text-white flex-1 font-semibold text-xs">
+                <option value="">-- Свободное окно --</option>
+                ${appData.clients.map(c => `
+                  <option value="${c.id}" ${s.bookedBy === c.id ? 'selected' : ''}>${c.name} (${c.id}) [Баланс: ${c.balance}]</option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const clientsCont = document.getElementById('adminClientsList');
+      clientsCont.innerHTML = appData.clients.map(c => `
+        <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
+          <div>
+            <p class="font-bold text-white">${c.name} <span class="text-slate-400">(${c.id})</span></p>
+            <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button type="button" onclick="coachAddMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]">+Метры</button>
+            <button type="button" onclick="changeBal('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
+            <button type="button" onclick="changeBal('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
+            <button type="button" onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function generateBatchSlots() {
+      const dateVal = document.getElementById('adminDateInput').value;
+      if (!dateVal) return alert("Выберите дату!");
 
       const daysOfWeek = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-      const dateObj = new Date(dateInput);
-      const dayName = daysOfWeek[dateObj.getDay()];
+      const d = new Date(dateVal);
+      const dayName = daysOfWeek[d.getDay()];
 
-      if (dayName === "Воскресенье") {
-        return alert("Воскресенье — выходной. Выберите день с Пн по Сб.");
-      }
+      if (dayName === "Воскресенье") return alert("Воскресенье — выходной. Выберите Пн–Сб.");
 
       for (let h = 7; h <= 23; h++) {
         const timeStr = (h < 10 ? '0' : '') + h + ':00';
-        const exists = state.data.slots.some(s => s.date === dateInput && s.time === timeStr);
+        const exists = appData.slots.some(s => s.date === dateVal && s.time === timeStr);
         if (!exists) {
-          state.data.slots.push({
+          appData.slots.push({
             id: Date.now() + Math.random(),
-            date: dateInput,
+            date: dateVal,
             day: dayName,
             time: timeStr,
             bookedBy: null,
@@ -260,443 +590,105 @@
           });
         }
       }
-
-      saveToServer();
-      render();
-      alert(`Сетка 07:00–23:00 на ${dayName} (${dateInput}) создана!`);
+      pushData();
+      renderAdmin();
+      alert(`Сетка 07:00–23:00 на ${dayName} (${dateVal}) создана!`);
     }
 
-    function assignClientToSlot(slotId, clientId) {
-      const slot = state.data.slots.find(s => s.id === slotId);
+    function assignSlotCoach(slotId, clientId) {
+      const slot = appData.slots.find(s => s.id === slotId);
       if (!slot) return;
       slot.bookedBy = clientId || null;
       slot.completed = false;
-      saveToServer();
-      render();
-    }
-
-    function bookSlot(slotId) {
-      const client = state.data.clients.find(c => c.id === state.currentClientId);
-      if (client.balance <= 0) {
-        return alert("У вас 0 доступных занятий. Продлите абонемент через Telegram.");
-      }
-      const slot = state.data.slots.find(s => s.id === slotId);
-      slot.bookedBy = client.id;
-      slot.completed = false;
-      saveToServer();
-      render();
-      alert(`Запись оформлена на ${slot.date} в ${slot.time}! Списание произойдёт строго после тренировки.`);
-    }
-
-    function cancelSlot(slotId) {
-      const slot = state.data.slots.find(s => s.id === slotId);
-      if (!slot) return;
-      slot.bookedBy = null;
-      slot.completed = false;
-      saveToServer();
-      render();
-    }
-
-    function addCoachMeters(clientId) {
-      const client = state.data.clients.find(c => c.id === clientId);
-      if (!client) return;
-      const meters = prompt(`Сколько метров проплыл ${client.name}? (например: 1500):`);
-      if (meters && parseInt(meters) > 0) {
-        client.meters = (client.meters || 0) + parseInt(meters);
-        saveToServer();
-        render();
-        alert(`${meters} м успешно зачислено!`);
-      }
-    }
-
-    function addManualClientMeters() {
-      const meters = prompt("Сколько метров вы проплыли самостоятельно? (например: 1000):");
-      if (meters && parseInt(meters) > 0) {
-        const client = state.data.clients.find(c => c.id === state.currentClientId);
-        if (client) {
-          client.meters = (client.meters || 0) + parseInt(meters);
-          saveToServer();
-          render();
-          alert(`+${meters} м добавлено к вашему маршруту!`);
-        }
-      }
-    }
-
-    function render() {
-      const main = document.getElementById('appContent');
-      const nav = document.getElementById('clientTabs');
-
-      if (state.currentView === 'admin') {
-        nav.classList.add('hidden');
-      } else {
-        nav.classList.remove('hidden');
-      }
-
-      // 1. Вход ученика
-      if (state.currentView === 'client_login' && state.currentTab === 'booking') {
-        main.innerHTML = `
-          <div class="my-auto py-8 text-center">
-            <div class="w-16 h-16 bg-blue-900/40 border border-blue-500/30 text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg">
-              <i class="fa-solid fa-person-swimming"></i>
-            </div>
-            <h2 class="text-xl font-black text-white">Кабинет пловца</h2>
-            <p class="text-slate-400 text-xs mt-1 mb-5">Введите ваш персональный код доступа</p>
-            <input id="clientCodeInput" type="text" placeholder="Например: 001" class="w-full text-center text-xl tracking-widest px-4 py-3.5 bg-slate-900 border border-slate-700 rounded-2xl font-black text-white mb-3 focus:border-red-500 focus:outline-none" />
-            <button onclick="loginClient()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 hover:from-blue-600 hover:to-red-500 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
-              Войти в профиль
-            </button>
-          </div>
-        `;
-        return;
-      }
-
-      // 2. Личный кабинет ученика
-      if (state.currentView === 'client_cabinet' && state.currentTab === 'booking') {
-        const client = state.data.clients.find(c => c.id === state.currentClientId);
-        const mySlots = state.data.slots.filter(s => s.bookedBy === client.id);
-        const freeSlots = state.data.slots.filter(s => !s.bookedBy && !s.completed);
-        const route = calculateRouteProgress(client.meters || 0);
-
-        const filteredFreeSlots = freeSlots.filter(s => {
-          const hour = parseInt(s.time.split(':')[0]);
-          if (state.slotFilterPeriod === 'morning') return hour >= 7 && hour < 12;
-          if (state.slotFilterPeriod === 'evening') return hour >= 17 && hour <= 23;
-          return true;
-        });
-
-        main.innerHTML = `
-          <div class="space-y-4">
-            
-            <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl border border-blue-900/50 flex justify-between items-center shadow-md">
-              <div>
-                <span class="text-[10px] text-red-400 font-extrabold uppercase">Пловец</span>
-                <h2 class="text-base font-black text-white leading-tight">${client.name}</h2>
-                <p class="text-[11px] text-slate-400">Код: <b>${client.id}</b></p>
-              </div>
-              <div class="text-right">
-                <span class="text-[10px] text-slate-400 font-semibold uppercase">Баланс</span>
-                <p class="text-2xl font-black text-red-500 leading-none">${client.balance} <span class="text-xs font-normal text-slate-300">зан.</span></p>
-                <span class="text-[9px] text-blue-300 block mt-1">*Списание после тренировки</span>
-              </div>
-            </div>
-
-            <!-- Авто-маршрут из Центра Владивостока -->
-            <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 rounded-2xl border border-blue-500/20 shadow-md">
-              <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="w-6 h-6 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-car-side"></i>
-                  </span>
-                  <span class="text-xs font-extrabold text-white">Маршрут из Центра Владивостока</span>
-                </div>
-                <button onclick="addManualClientMeters()" class="text-[10px] bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-2.5 py-1 rounded-lg font-bold border border-red-500/40 transition">
-                  + Мой заплыв
-                </button>
-              </div>
-
-              <div class="text-xs text-slate-300 mb-2">
-                Вы проплыли: <b class="text-white text-sm">${route.totalKm} км</b> (${client.meters || 0} м).
-                <p class="text-[11px] text-blue-300 mt-0.5">
-                  <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Сейчас на отметке: <b>${route.reached}</b>
-                </p>
-              </div>
-
-              ${route.next ? `
-                <div class="space-y-1">
-                  <div class="flex justify-between text-[10px] font-bold">
-                    <span class="text-slate-400">След. цель: ${route.next.name}</span>
-                    <span class="text-red-400">ещё ${route.toNextKm} км</span>
-                  </div>
-                  <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
-                    <div class="bg-gradient-to-r from-blue-500 to-red-500 h-full rounded-full transition-all duration-500" style="width: ${route.percent}%"></div>
-                  </div>
-                </div>
-              ` : `
-                <p class="text-xs text-emerald-400 font-bold">🏆 Вы преодолели путь до Находки!</p>
-              `}
-            </div>
-
-            <!-- Чек-лист перед выходом -->
-            <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 block">
-                <i class="fa-solid fa-clipboard-check text-blue-400 mr-1"></i> Чек-лист перед выходом в бассейн:
-              </span>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="toggleCheck('glasses')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.glasses ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
-                  <span>🥽 Очки</span>
-                  <i class="fa-solid ${state.checklist.glasses ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
-                </button>
-                <button onclick="toggleCheck('cap')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.cap ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
-                  <span>🏊‍♂️ Шапочка</span>
-                  <i class="fa-solid ${state.checklist.cap ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
-                </button>
-                <button onclick="toggleCheck('suit')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.suit ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
-                  <span>🩱 Плавки / костюм</span>
-                  <i class="fa-solid ${state.checklist.suit ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
-                </button>
-                <button onclick="toggleCheck('towel')" class="p-2 rounded-xl border text-left flex items-center justify-between transition ${state.checklist.towel ? 'bg-red-950/40 border-red-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
-                  <span>🧼 Полотенце</span>
-                  <i class="fa-solid ${state.checklist.towel ? 'fa-check text-red-500' : 'fa-circle text-slate-700 text-[10px]'}"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Тренировки -->
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши тренировки:</span>
-              ${mySlots.length === 0 ? '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">Нет активных тренировок.</p>' : ''}
-              <div class="space-y-1.5 max-h-40 overflow-y-auto">
-                ${mySlots.map(s => `
-                  <div class="flex justify-between items-center ${s.completed ? 'bg-slate-900 border-slate-800 opacity-60' : 'bg-blue-950/40 border-blue-500/40'} border p-2.5 rounded-xl text-xs">
-                    <div>
-                      <span class="font-bold text-white">${s.date \vert{}\vert{} s.day},${s.time}</span>
-                      <p class="text-[10px] ${s.completed ? 'text-slate-400 font-semibold' : 'text-red-400 font-bold'}">
-                        ${s.completed ? '✓ Проведено (списано)' : '● Запланировано (спишется после тренировки)'}
-                      </p>
-                    </div>
-                    ${!s.completed ? `<button onclick="cancelSlot(${s.id})" class="text-red-400 font-semibold hover:underline">Отменить</button>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Свободные окна тренера -->
-            <div>
-              <div class="flex justify-between items-center mb-1.5">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Свободное время тренера (Пн–Сб)</span>
-                <div class="flex gap-1 text-[10px]">
-                  <button onclick="state.slotFilterPeriod='all'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='all' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Все</button>
-                  <button onclick="state.slotFilterPeriod='morning'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='morning' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Утро</button>
-                  <button onclick="state.slotFilterPeriod='evening'; render()" class="px-2 py-0.5 rounded-md font-bold ${state.slotFilterPeriod==='evening' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'}">Вечер</button>
-                </div>
-              </div>
-
-              <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                ${filteredFreeSlots.length === 0 ? '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Нет свободных окон на этот период.</p>' : ''}
-                ${filteredFreeSlots.map(s => `
-                  <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs hover:border-blue-500 transition">
-                    <div>
-                      <span class="font-bold text-slate-200">${s.date ? s.date + ' (' + s.day + ')' : s.day}</span>
-                      <span class="block text-red-500 font-black text-sm">${s.time}</span>
-                    </div>
-                    <button onclick="bookSlot(${s.id})" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm">
-                      Записаться
-                    </button>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <button onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-1 font-semibold">
-              Выйти из кабинета
-            </button>
-
-          </div>
-        `;
-        return;
-      }
-
-      // 3. Панель тренера (Admin)
-      if (state.currentView === 'admin') {
-        const sortedSlots = [...state.data.slots].sort((a,b) => (a.date || '') > (b.date || '') ? 1 : -1);
-
-        main.innerHTML = `
-          <div class="space-y-4">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-              <div>
-                <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">Панель тренера</span>
-                <h2 class="text-base font-black text-white">Управление графиком и пловцами</h2>
-              </div>
-              <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
-            </div>
-
-            <!-- Генератор окон 07:00 - 23:00 -->
-            <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2">
-              <span class="font-bold text-blue-200 block">Открыть окна на день (07:00 - 23:00, Пн-Сб):</span>
-              <div class="flex gap-2">
-                <input id="adminBatchDate" type="date" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white font-bold flex-1" />
-                <button onclick="generateDaySlots()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-md">
-                  + 17 слотов
-                </button>
-              </div>
-            </div>
-
-            <!-- Добавить ученика -->
-            <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-xs space-y-2">
-              <span class="font-bold text-white block">Добавить ученика:</span>
-              <div class="grid grid-cols-2 gap-2">
-                <input id="newClientName" placeholder="ФИО ученика" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white" />
-                <input id="newClientCode" placeholder="Код входа (001)" class="p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
-              </div>
-              <div class="flex gap-2">
-                <input id="newClientBal" type="number" placeholder="Тренировок" value="8" class="w-1/2 p-2 border border-slate-700 rounded-xl bg-slate-950 text-white font-bold" />
-                <button onclick="addClient()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2 shadow-sm">Добавить</button>
-              </div>
-            </div>
-
-            <!-- Окна и привязка -->
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Окна и закрепление клиентов:</span>
-              <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                ${sortedSlots.length === 0 ? '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Окон нет. Добавьте их выше.</p>' : ''}
-                ${sortedSlots.map(s => `
-                  <div class="bg-slate-900 border ${s.completed ? 'border-slate-800 opacity-60' : s.bookedBy ? 'border-red-500/50' : 'border-slate-800'} p-2.5 rounded-xl text-xs space-y-1.5">
-                    <div class="flex justify-between items-center">
-                      <div>
-                        <span class="font-bold text-white">${s.date || s.day} | ${s.time}</span>${s.completed ? '<span class="ml-2 text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold">Проведено (списано)</span>' : ''}
-                      </div>
-                      <button onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                      <span class="text-[10px] text-slate-400">Пловец:</span>
-                      <select onchange="assignClientToSlot(${s.id}, this.value)" class="p-1.5 border border-slate-700 rounded-lg bg-slate-950 text-white flex-1 font-semibold text-xs">
-                        <option value="">-- Свободное окно --</option>
-                        ${state.data.clients.map(c => `
-                          <option value="${c.id}" ${s.bookedBy === c.id ? 'selected' : ''}>${c.name} (${c.id}) [Баланс: ${c.balance}]</option>
-                        `).join('')}
-                      </select>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Список учеников -->
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Ученики и километраж:</span>
-              <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                ${state.data.clients.map(c => `
-                  <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
-                    <div>
-                      <p class="font-bold text-white">${c.name} <span class="text-slate-400">(${c.id})</span></p>
-                      <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <button onclick="addCoachMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]">+Метры</button>
-                      <button onclick="updateBalance('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
-                      <button onclick="updateBalance('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
-                      <button onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-          </div>
-        `;
-        return;
-      }
-
-      // 4. Магазин экипировки
-      if (state.currentTab === 'shop') {
-        main.innerHTML = `
-          <div class="space-y-3">
-            <div class="flex justify-between items-center">
-              <div>
-                <h2 class="text-sm font-black text-white">Магазин экипировки</h2>
-                <p class="text-[11px] text-slate-400">Рекомендовано тренером</p>
-              </div>
-              <a href="https://vk.ru/club239758541" target="_blank" class="text-xs text-red-500 font-bold hover:underline">
-                Каталог VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-              </a>
-            </div>
-
-            <div class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-              ${state.data.products.map(p => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
-                  <img src="${p.image}" class="w-16 h-16 rounded-xl object-cover bg-slate-950 flex-shrink-0 border border-slate-800">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[9px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-extrabold uppercase">${p.category || 'Плавание'}</span>
-                    <h3 class="font-bold text-white text-xs truncate mt-0.5">${p.title}</h3>
-                    <p class="text-[11px] text-slate-400 line-clamp-1">${p.desc}</p>
-                    <div class="flex justify-between items-center mt-1.5">
-                      <span class="font-black text-red-500 text-sm">${p.price} ₽</span>
-                      <a href="https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Кирилл, хочу заказать: ' + p.title)}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-1 rounded-lg transition">
-                        Заказать
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    function loginClient() {
-      const code = document.getElementById('clientCodeInput').value.trim();
-      const client = state.data.clients.find(c => c.id === code);
-      if (client) {
-        state.currentClientId = client.id;
-        state.currentView = 'client_cabinet';
-        render();
-      } else {
-        alert("Ученик с таким кодом не найден. Проверьте код или напишите Кириллу.");
-      }
-    }
-
-    function toggleAdminAuth() {
-      if (state.currentView === 'admin') {
-        state.currentView = 'client_login';
-        render();
-        return;
-      }
-      const pin = prompt("Введите PIN-код тренера:");
-      if (pin === ADMIN_PIN) {
-        state.currentView = 'admin';
-        render();
-      } else if (pin !== null) {
-        alert("Неверный PIN-код!");
-      }
-    }
-
-    function logout() {
-      state.currentClientId = null;
-      state.currentView = 'client_login';
-      state.currentTab = 'booking';
-      render();
-    }
-
-    function addClient() {
-      const name = document.getElementById('newClientName').value.trim();
-      const code = document.getElementById('newClientCode').value.trim();
-      const bal = parseInt(document.getElementById('newClientBal').value) || 0;
-      if (!name || !code) return alert("Заполните имя и код!");
-
-      state.data.clients.push({ id: code, name: name, balance: bal, meters: 0 });
-      saveToServer();
-      render();
-      alert(`Ученик ${name} с кодом ${code} успешно создан!`);
-    }
-
-    function deleteClient(clientId) {
-      if (!confirm("Удалить ученика?")) return;
-      state.data.slots.forEach(s => { if (s.bookedBy === clientId) s.bookedBy = null; });
-      state.data.clients = state.data.clients.filter(c => c.id !== clientId);
-      saveToServer();
-      render();
-    }
-
-    function updateBalance(clientId, delta) {
-      const client = state.data.clients.find(c => c.id === clientId);
-      if (client) {
-        client.balance = Math.max(0, client.balance + delta);
-        saveToServer();
-        render();
-      }
+      pushData();
+      renderAdmin();
     }
 
     function deleteSlot(slotId) {
       if (!confirm("Удалить это окно?")) return;
-      state.data.slots = state.data.slots.filter(s => s.id !== slotId);
-      saveToServer();
-      render();
+      appData.slots = appData.slots.filter(s => s.id !== slotId);
+      pushData();
+      renderAdmin();
     }
 
-    // Первичный запуск
-    render();
+    function addNewClient() {
+      const name = document.getElementById('newUName').value.trim();
+      const code = document.getElementById('newUCode').value.trim();
+      const bal = parseInt(document.getElementById('newUBal').value) || 0;
+      if (!name || !code) return alert("Заполните имя и код!");
+
+      appData.clients.push({ id: code, name: name, balance: bal, meters: 0 });
+      pushData();
+      renderAdmin();
+      document.getElementById('newUName').value = '';
+      document.getElementById('newUCode').value = '';
+      alert(`Ученик ${name} с кодом ${code} добавлен!`);
+    }
+
+    function changeBal(id, delta) {
+      const c = appData.clients.find(x => x.id === id);
+      if (c) {
+        c.balance = Math.max(0, c.balance + delta);
+        pushData();
+        renderAdmin();
+      }
+    }
+
+    function deleteClient(id) {
+      if (!confirm("Удалить ученика?")) return;
+      appData.clients = appData.clients.filter(x => x.id !== id);
+      appData.slots.forEach(s => { if (s.bookedBy === id) s.bookedBy = null; });
+      pushData();
+      renderAdmin();
+    }
+
+    function coachAddMeters(id) {
+      const c = appData.clients.find(x => x.id === id);
+      if (!c) return;
+      const m = prompt(`Сколько метров проплыл ${c.name} на занятии?`, "1500");
+      if (m && parseInt(m) > 0) {
+        c.meters = (c.meters || 0) + parseInt(m);
+        pushData();
+        renderAdmin();
+      }
+    }
+
+    function openDistanceModal() {
+      document.getElementById('distModal').classList.remove('hidden');
+    }
+    function closeDistanceModal() {
+      document.getElementById('distModal').classList.add('hidden');
+    }
+    function saveManualMeters() {
+      const input = document.getElementById('modalMetersInput');
+      const val = parseInt(input.value);
+      if (!val || val <= 0) return alert("Введите число метров!");
+      const c = appData.clients.find(x => x.id === currentClientId);
+      if (c) {
+        c.meters = (c.meters || 0) + val;
+        pushData();
+        closeDistanceModal();
+        input.value = '';
+        renderCabinet();
+        alert(`+${val} м добавлено к вашему маршруту!`);
+      }
+    }
+
+    function logout() {
+      currentClientId = null;
+      document.getElementById('viewCabinet').classList.add('hidden');
+      document.getElementById('viewAdmin').classList.add('hidden');
+      document.getElementById('viewLogin').classList.remove('hidden');
+    }
+
+    function refreshActiveView() {
+      if (currentClientId) renderCabinet();
+      else if (!document.getElementById('viewAdmin').classList.contains('hidden')) renderAdmin();
+    }
+
+    // Запуск
+    syncData();
+    setInterval(syncData, 8000);
   </script>
 </body>
 </html>
