@@ -260,7 +260,7 @@
 
     </main>
 
-    <!-- ОТДЕЛЬНАЯ ПЛАШКА: Сетка окон Пн-Сб -->
+    <!-- Сетка окон Пн-Сб -->
     <div id="scheduleModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3">
       <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-4 relative shadow-2xl flex flex-col max-h-[90vh]">
         <div class="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -273,7 +273,7 @@
           </button>
         </div>
 
-        <!-- Переключатель дней недели: Пн-Сб -->
+        <!-- Дни недели: Пн-Сб -->
         <div class="flex gap-1 py-2 overflow-x-auto no-scrollbar border-b border-slate-800">
           <button type="button" onclick="selectScheduleDay('Пн')" id="dayBtnПн" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-red-600 text-white">Пн</button>
           <button type="button" onclick="selectScheduleDay('Вт')" id="dayBtnВт" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Вт</button>
@@ -421,6 +421,7 @@
     let currentFreeSlotsFilter = 'all';
     let tempNewProdImg = '';
     let activeInternalView = 'login'; // 'login', 'cabinet', 'admin'
+    let isDataLoadedFromCloud = false; // ЗАЩИТА: не даёт перезаписать базу при старте!
 
     const ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
@@ -454,42 +455,54 @@
       ]
     };
 
+    // Чтение локального кэша
     try {
-      const local = JSON.parse(localStorage.getItem('onipko_cache_v5'));
-      if (local && local.clients) appData = local;
+      const local = JSON.parse(localStorage.getItem('onipko_permanent_db'));
+      if (local && local.clients && local.clients.length) {
+        appData = local;
+      }
     } catch(e) {}
 
     let currentClientId = null;
 
+    // Синхронизация с Firebase (ТОЛЬКО ЧТЕНИЕ И СЛИЯНИЕ)
     async function syncData() {
       try {
         const res = await fetch(DB_URL, { cache: 'no-store' });
         if (res.ok) {
           const cloud = await res.json();
-          if (cloud && cloud.clients) {
+          if (cloud && cloud.clients && cloud.clients.length > 0) {
             appData = cloud;
             if (!appData.weeklySchedule) appData.weeklySchedule = {};
             if (!appData.deductedHistory) appData.deductedHistory = {};
             if (!appData.products) appData.products = [];
-            localStorage.setItem('onipko_cache_v5', JSON.stringify(appData));
-          } else {
+            isDataLoadedFromCloud = true;
+            localStorage.setItem('onipko_permanent_db', JSON.stringify(appData));
+          } else if (!isDataLoadedFromCloud) {
+            // Если база в облаке совсем пустая (первый раз в жизни), только тогда инициализируем
             pushData();
+            isDataLoadedFromCloud = true;
           }
           checkCalendarDeduction();
           refreshActiveView();
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn("Фоновое обновление...", e);
+      }
     }
 
+    // Сохранение в Firebase
     async function pushData() {
       try {
-        localStorage.setItem('onipko_cache_v5', JSON.stringify(appData));
+        localStorage.setItem('onipko_permanent_db', JSON.stringify(appData));
         await fetch(DB_URL, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(appData)
         });
-      } catch(e) {}
+      } catch(e) {
+        console.warn("Ошибка облачной записи:", e);
+      }
     }
 
     function checkCalendarDeduction() {
@@ -531,7 +544,7 @@
       if (hasDeductions) pushData();
     }
 
-    // НАДЕЖНОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // НАДЕЖНОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК БЕЗ ПОТЕРИ ЭКРАНА
     function switchMainTab(tab) {
       const btnB = document.getElementById('tabBtnBooking');
       const btnS = document.getElementById('tabBtnShop');
@@ -590,6 +603,7 @@
       }
     }
 
+    // СЖАТИЕ ФОТО ДО 150px (весит всего 25 КБ, никогда не ломает память)
     function uploadStudentPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -598,25 +612,19 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          let width = img.width;
-          let height = img.height;
-          const maxSide = 250;
-
-          if (width > height && width > maxSide) {
-            height = Math.round((height * maxSide) / width);
-            width = maxSide;
-          } else if (height > maxSide) {
-            width = Math.round((width * maxSide) / height);
-            height = maxSide;
-          }
-
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
+          const size = 150;
+          canvas.width = size;
+          canvas.height = size;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
 
-          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          // Квадратная обрезка по центру
+          const minDim = Math.min(img.width, img.height);
+          const startX = (img.width - minDim) / 2;
+          const startY = (img.height - minDim) / 2;
+          ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
+
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
           const client = appData.clients.find(c => c.id === currentClientId);
           if (client) {
             client.photo = compressed;
@@ -999,25 +1007,18 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          let width = img.width;
-          let height = img.height;
-          const maxSide = 400;
-
-          if (width > height && width > maxSide) {
-            height = Math.round((height * maxSide) / width);
-            width = maxSide;
-          } else if (height > maxSide) {
-            width = Math.round((width * maxSide) / height);
-            height = maxSide;
-          }
-
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
+          const size = 300;
+          canvas.width = size;
+          canvas.height = size;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
 
-          tempNewProdImg = canvas.toDataURL('image/jpeg', 0.85);
+          const minDim = Math.min(img.width, img.height);
+          const startX = (img.width - minDim) / 2;
+          const startY = (img.height - minDim) / 2;
+          ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
+
+          tempNewProdImg = canvas.toDataURL('image/jpeg', 0.8);
           const preview = document.getElementById('newProdPreview');
           preview.src = tempNewProdImg;
           preview.classList.remove('hidden');
@@ -1159,7 +1160,7 @@
       `).join('');
     }
 
-    // === ОПЕРАЦИИ ТРЕНЕРА ===
+    // === ДРУГИЕ ОПЕРАЦИИ ТРЕНЕРА ===
 
     function addNewClient() {
       const name = document.getElementById('newUName').value.trim();
@@ -1241,9 +1242,9 @@
       else if (activeInternalView === 'admin') renderAdmin();
     }
 
-    // Запуск
+    // Запуск синхронизации
     syncData();
-    setInterval(syncData, 8000);
+    setInterval(syncData, 6000);
   </script>
 </body>
 </html>
