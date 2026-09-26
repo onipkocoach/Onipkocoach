@@ -92,14 +92,14 @@
           </div>
         </div>
 
-        <!-- Владивостокский маршрут -->
+        <!-- Большой маршрут: Владивосток ➔ Москва -->
         <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 rounded-2xl border border-blue-500/20 shadow-md">
           <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-car-side"></i>
+                <i class="fa-solid fa-route"></i>
               </span>
-              <span class="text-xs font-extrabold text-white">Маршрут из Центра Владивостока</span>
+              <span class="text-xs font-extrabold text-white">Экспедиция: Владивосток ➔ Москва</span>
             </div>
             <button type="button" onclick="openDistanceModal()" class="text-[10px] bg-red-600/30 text-red-300 px-2.5 py-1 rounded-lg font-bold border border-red-500/40">
               + Мой заплыв
@@ -109,7 +109,7 @@
           <div class="text-xs text-slate-300 mb-2">
             Вы проплыли: <b id="cabTotalKm" class="text-white text-sm">0.0 км</b> (<span id="cabTotalMeters">0</span> м).
             <p class="text-[11px] text-blue-300 mt-0.5">
-              <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Сейчас на отметке: <b id="cabReachedPoint">Центральная площадь</b>
+              <i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Текущая точка: <b id="cabReachedPoint">Центральная площадь</b>
             </p>
           </div>
 
@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <!-- Записи ученика -->
+        <!-- Активные тренировки ученика -->
         <div>
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши активные тренировки:</span>
           <div id="cabMyBookingsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
@@ -400,7 +400,7 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 class="text-sm font-bold text-white mb-2">Внести самостоятельный заплыв</h3>
-        <p class="text-[11px] text-slate-400 mb-3">Метры добавятся в ваш маршрут из Центра Владивостока</p>
+        <p class="text-[11px] text-slate-400 mb-3">Метры добавятся в ваш маршрут из Владивостока</p>
         <input id="modalMetersInput" type="number" placeholder="Например: 1200 м" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-center mb-3 focus:outline-none focus:border-red-500" />
         <button type="button" onclick="saveManualMeters()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow-lg">
           Сохранить дистанцию
@@ -420,20 +420,51 @@
     let targetSlotTime = null;
     let currentFreeSlotsFilter = 'all';
     let tempNewProdImg = '';
-    let activeInternalView = 'login'; // 'login', 'cabinet', 'admin'
-    let isDataLoadedFromCloud = false; // ЗАЩИТА: не даёт перезаписать базу при старте!
+    let activeInternalView = 'login';
+    let isDataLoadedFromCloud = false;
 
+    // ПОЛНЫЙ МАРШРУТ: ВЛАДИВОСТОК ➔ МОСКВА (по возрастанию км)
     const ROUTES = [
+      // 1. Пригород Владивостока
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
       { name: "Вторая Речка (Автовокзал)", km: 8.0 },
       { name: "СК «Чемпион» / фабрика «Заря»", km: 13.0 },
-      { name: "Океанариум (о. Русский)", km: 18.0 },
       { name: "Седанка / Садгород", km: 25.0 },
       { name: "Бухта Шамора (Лазурная)", km: 35.0 },
       { name: "г. Артём (Центр)", km: 45.0 },
       { name: "Международный аэропорт Кневичи (VVO)", km: 55.0 },
+      
+      // 2. Города Приморского края
       { name: "г. Уссурийск", km: 100.0 },
-      { name: "г. Находка", km: 175.0 }
+      { name: "г. Спасск-Дальний", km: 240.0 },
+      { name: "г. Дальнереченск", km: 410.0 },
+      { name: "пгт. Лучегорск", km: 500.0 },
+      
+      // 3. Дальний Восток
+      { name: "г. Хабаровск (Амурский мост)", km: 760.0 },
+      { name: "г. Биробиджан", km: 940.0 },
+      { name: "г. Благовещенск", km: 1440.0 },
+      { name: "г. Чита (Забайкалье)", km: 2850.0 },
+      
+      // 4. Сибирь и Байкал
+      { name: "г. Улан-Удэ", km: 3500.0 },
+      { name: "Озеро Байкал (Слюдянка)", km: 3850.0 },
+      { name: "г. Иркутск", km: 3950.0 },
+      { name: "г. Красноярск (Енисей)", km: 5000.0 },
+      { name: "г. Кемерово", km: 5530.0 },
+      { name: "г. Новосибирск (Обь)", km: 5800.0 },
+      { name: "г. Омск (Иртыш)", km: 6450.0 },
+      
+      // 5. Урал и Поволжье
+      { name: "г. Тюмень", km: 7080.0 },
+      { name: "г. Екатеринбург (Граница Европы и Азии)", km: 7400.0 },
+      { name: "г. Пермь (Кама)", km: 7760.0 },
+      { name: "г. Казань (Волга)", km: 8250.0 },
+      { name: "г. Нижний Новгород (Стрелка)", km: 8650.0 },
+      { name: "г. Владимир (Золотые Ворота)", km: 8900.0 },
+      
+      // 6. ФИНИШ
+      { name: "г. Москва (Красная площадь) 🏆", km: 9100.0 }
     ];
 
     let appData = {
@@ -455,7 +486,6 @@
       ]
     };
 
-    // Чтение локального кэша
     try {
       const local = JSON.parse(localStorage.getItem('onipko_permanent_db'));
       if (local && local.clients && local.clients.length) {
@@ -465,7 +495,6 @@
 
     let currentClientId = null;
 
-    // Синхронизация с Firebase (ТОЛЬКО ЧТЕНИЕ И СЛИЯНИЕ)
     async function syncData() {
       try {
         const res = await fetch(DB_URL, { cache: 'no-store' });
@@ -479,7 +508,6 @@
             isDataLoadedFromCloud = true;
             localStorage.setItem('onipko_permanent_db', JSON.stringify(appData));
           } else if (!isDataLoadedFromCloud) {
-            // Если база в облаке совсем пустая (первый раз в жизни), только тогда инициализируем
             pushData();
             isDataLoadedFromCloud = true;
           }
@@ -491,7 +519,6 @@
       }
     }
 
-    // Сохранение в Firebase
     async function pushData() {
       try {
         localStorage.setItem('onipko_permanent_db', JSON.stringify(appData));
@@ -544,7 +571,6 @@
       if (hasDeductions) pushData();
     }
 
-    // НАДЕЖНОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК БЕЗ ПОТЕРИ ЭКРАНА
     function switchMainTab(tab) {
       const btnB = document.getElementById('tabBtnBooking');
       const btnS = document.getElementById('tabBtnShop');
@@ -603,7 +629,6 @@
       }
     }
 
-    // СЖАТИЕ ФОТО ДО 150px (весит всего 25 КБ, никогда не ломает память)
     function uploadStudentPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -618,7 +643,6 @@
           canvas.height = size;
           const ctx = canvas.getContext('2d');
 
-          // Квадратная обрезка по центру
           const minDim = Math.min(img.width, img.height);
           const startX = (img.width - minDim) / 2;
           const startY = (img.height - minDim) / 2;
@@ -652,7 +676,7 @@
       document.getElementById('cabTotalKm').textContent = totalKm + " км";
       document.getElementById('cabTotalMeters').textContent = client.meters || 0;
 
-      let reached = "Центральная площадь";
+      let reached = "Центральная площадь Владивостока";
       let next = ROUTES[0];
       let prevKm = 0;
 
@@ -675,8 +699,8 @@
         const percent = Math.min(100, Math.max(0, Math.round(((totalKm - prevKm) / (next.km - prevKm)) * 100)));
         document.getElementById('cabProgressBar').style.width = percent + "%";
       } else {
-        document.getElementById('cabNextPoint').textContent = "ФИНИШ: г. Находка!";
-        document.getElementById('cabLeftKm').textContent = "🏆 Завершено";
+        document.getElementById('cabNextPoint').textContent = "ФИНИШ: г. Москва (Красная площадь)!";
+        document.getElementById('cabLeftKm').textContent = "🏆 Финиш!";
         document.getElementById('cabProgressBar').style.width = "100%";
       }
 
