@@ -14,7 +14,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center p-2 sm:p-6 pb-12">
 
-  <div class="w-full max-w-md bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col min-h-[720px] relative">
+  <div class="w-full max-w-md bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col min-h-[750px] relative">
     
     <!-- Шапка профиля -->
     <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-red-700 text-white p-5 relative border-b border-red-500/30">
@@ -44,7 +44,7 @@
     <!-- Вкладки навигации -->
     <nav class="flex border-b border-slate-800 bg-slate-900/90 text-xs font-bold text-slate-400">
       <button type="button" onclick="switchMainTab('booking')" id="tabBtnBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-person-swimming"></i> Кабинет и расписание
+        <i class="fa-solid fa-person-swimming"></i> Кабинет и запись
       </button>
       <button type="button" onclick="switchMainTab('shop')" id="tabBtnShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-bag-shopping"></i> Экипировка
@@ -69,6 +69,7 @@
 
       <!-- 2. Личный кабинет ученика -->
       <section id="viewCabinet" class="hidden space-y-4">
+        <!-- Шапка кабинета -->
         <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl border border-blue-900/50 flex justify-between items-center shadow-md">
           <div class="flex items-center gap-3">
             <label class="relative cursor-pointer group" title="Нажмите, чтобы изменить фото">
@@ -144,10 +145,28 @@
           </div>
         </div>
 
-        <!-- Постоянное расписание ученика -->
+        <!-- Записи ученика (с возможностью отмены) -->
         <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваше постоянное расписание:</span>
-          <div id="cabMyScheduleList" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши активные тренировки:</span>
+          <div id="cabMyBookingsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+        </div>
+
+        <!-- Свободные окна тренера (с возможностью записаться) -->
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Свободное время тренера (Пн–Сб)</span>
+            <!-- Фильтр по дням недели -->
+            <div class="flex gap-1 text-[10px]">
+              <button type="button" onclick="filterFreeSlots('all')" class="px-2 py-0.5 rounded-md font-bold bg-red-600 text-white" id="filterBtnAll">Все</button>
+              <button type="button" onclick="filterFreeSlots('Пн')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnПн">Пн</button>
+              <button type="button" onclick="filterFreeSlots('Вт')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnВт">Вт</button>
+              <button type="button" onclick="filterFreeSlots('Ср')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnСр">Ср</button>
+              <button type="button" onclick="filterFreeSlots('Чт')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnЧт">Чт</button>
+              <button type="button" onclick="filterFreeSlots('Пт')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnПт">Пт</button>
+              <button type="button" onclick="filterFreeSlots('Сб')" class="px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400" id="filterBtnСб">Сб</button>
+            </div>
+          </div>
+          <div id="cabFreeSlotsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
         <button type="button" onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-2 font-semibold">
@@ -160,7 +179,7 @@
         <div class="flex justify-between items-center pb-2 border-b border-slate-800">
           <div>
             <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">Панель тренера</span>
-            <h2 class="text-base font-black text-white">Управление расписанием и учениками</h2>
+            <h2 class="text-base font-black text-white">Управление расписанием и товарами</h2>
           </div>
           <button type="button" onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
         </div>
@@ -187,11 +206,46 @@
         <!-- Список учеников с кнопкой изменения профиля -->
         <div>
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Список учеников:</span>
-          <div id="adminClientsList" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
+          <div id="adminClientsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Добавление нового товара в магазин -->
+        <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2.5">
+          <span class="font-bold text-blue-200 block text-sm">Добавить товар в магазин:</span>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="newProdTitle" placeholder="Название товара" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white" />
+            <input id="newProdCategory" placeholder="Раздел (Очки, Шапочки)" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="newProdPrice" type="number" placeholder="Цена (₽)" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white font-bold" />
+            <input id="newProdColors" placeholder="Цвета (черный, синий...)" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white" />
+          </div>
+          
+          <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 flex items-center gap-3">
+            <img id="newProdPreview" class="hidden w-12 h-12 object-cover rounded-lg border border-slate-700" />
+            <div class="flex-1">
+              <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl cursor-pointer inline-flex items-center gap-1.5 text-xs shadow-sm transition">
+                <i class="fa-solid fa-camera"></i> Выбрать фото
+                <input type="file" accept="image/*" class="hidden" onchange="handleNewProductPhoto(event)" />
+              </label>
+              <span id="newProdPhotoStatus" class="block text-[10px] text-emerald-400 font-semibold mt-0.5"></span>
+            </div>
+          </div>
+
+          <textarea id="newProdDesc" placeholder="Подробное описание товара" class="w-full p-2 border border-slate-700 rounded-xl bg-slate-900 text-white h-16"></textarea>
+          <button type="button" onclick="addNewProduct()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold py-2.5 shadow-sm text-xs transition">
+            Опубликовать товар
+          </button>
+        </div>
+
+        <!-- Список товаров в админке -->
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Товары в витрине:</span>
+          <div id="adminProductsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
       </section>
 
-      <!-- 4. Витрина товаров -->
+      <!-- 4. Витрина товаров для учеников -->
       <section id="viewShop" class="hidden space-y-3">
         <div class="flex justify-between items-center">
           <div>
@@ -202,27 +256,12 @@
             Каталог VK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
           </a>
         </div>
-        <div class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
-            <img src="https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80" class="w-16 h-16 rounded-xl object-cover bg-slate-950 flex-shrink-0 border border-slate-800">
-            <div class="flex-1 min-w-0">
-              <span class="text-[9px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-extrabold uppercase">ОЧКИ</span>
-              <h3 class="font-bold text-white text-xs truncate mt-0.5">Mad Wave Alien</h3>
-              <p class="text-[11px] text-slate-400 line-clamp-1">Стартово-тренировочные зеркальные очки.</p>
-              <div class="flex justify-between items-center mt-1.5">
-                <span class="font-black text-red-500 text-sm">3 490 ₽</span>
-                <a href="https://t.me/kkkkk_ooooo?text=Здравствуйте,%20хочу%20заказать%20очки%20Mad%20Wave%20Alien" target="_blank" class="bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-lg">
-                  Заказать
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div id="clientShopProducts" class="space-y-2.5 max-h-[520px] overflow-y-auto pr-1"></div>
       </section>
 
     </main>
 
-    <!-- ОТДЕЛЬНАЯ ПЛАШКА: Сетка расписания Пн-Сб с окнами -->
+    <!-- ОТДЕЛЬНАЯ ПЛАШКА: Сетка окон Пн-Сб -->
     <div id="scheduleModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3">
       <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-4 relative shadow-2xl flex flex-col max-h-[90vh]">
         <div class="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -254,7 +293,7 @@
       </div>
     </div>
 
-    <!-- Модалка выбора ученика для слота -->
+    <!-- Модалка выбора ученика для слота тренером -->
     <div id="assignStudentModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-4 shadow-2xl text-center">
         <h3 id="assignModalTitle" class="text-sm font-black text-white mb-2">Закрепить ученика</h3>
@@ -272,7 +311,7 @@
         <button type="button" onclick="closeEditClientModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
-        <h3 class="text-base font-black text-white mb-3">Изменить ученика</h3>
+        <h3 class="text-base font-black text-white mb-3">Изменить профиль ученика</h3>
         <input type="hidden" id="editClientId" />
         
         <div class="space-y-3 text-xs">
@@ -294,6 +333,44 @@
           </div>
           <button type="button" onclick="saveEditedClient()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg mt-2">
             Сохранить изменения
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модалка редактирования товара -->
+    <div id="editProductModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 relative shadow-2xl">
+        <button type="button" onclick="closeEditProductModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-base font-black text-white mb-3">Редактировать товар</h3>
+        <input type="hidden" id="editProductId" />
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Название:</label>
+            <input id="editProdTitle" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Раздел:</label>
+              <input id="editProdCategory" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white" />
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Цена (₽):</label>
+              <input id="editProdPrice" type="number" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Цвета:</label>
+            <input id="editProdColors" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Описание:</label>
+            <textarea id="editProdDesc" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white h-16"></textarea>
+          </div>
+          <button type="button" onclick="saveEditedProduct()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg">
+            Сохранить
           </button>
         </div>
       </div>
@@ -342,6 +419,8 @@
     const DAY_MAP_INDEX = { 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
     let activeScheduleDay = 'Пн';
     let targetSlotTime = null;
+    let currentFreeSlotsFilter = 'all';
+    let tempNewProdImg = '';
 
     const ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
@@ -360,12 +439,23 @@
       clients: [
         { id: "001", name: "Первый ученик", balance: 8, meters: 0, photo: "" }
       ],
-      weeklySchedule: {},
-      deductedHistory: {}
+      weeklySchedule: {}, // { "Пн_08:00": "001" }
+      deductedHistory: {},
+      products: [
+        {
+          id: 101,
+          category: "Очки",
+          title: "Mad Wave Alien",
+          price: 3490,
+          desc: "Стартово-тренировочные зеркальные очки.",
+          image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80",
+          colors: "Серый / Желтый, Черный"
+        }
+      ]
     };
 
     try {
-      const local = JSON.parse(localStorage.getItem('onipko_cache_v3'));
+      const local = JSON.parse(localStorage.getItem('onipko_cache_v4'));
       if (local && local.clients) appData = local;
     } catch(e) {}
 
@@ -380,7 +470,8 @@
             appData = cloud;
             if (!appData.weeklySchedule) appData.weeklySchedule = {};
             if (!appData.deductedHistory) appData.deductedHistory = {};
-            localStorage.setItem('onipko_cache_v3', JSON.stringify(appData));
+            if (!appData.products) appData.products = [];
+            localStorage.setItem('onipko_cache_v4', JSON.stringify(appData));
           } else {
             pushData();
           }
@@ -392,7 +483,7 @@
 
     async function pushData() {
       try {
-        localStorage.setItem('onipko_cache_v3', JSON.stringify(appData));
+        localStorage.setItem('onipko_cache_v4', JSON.stringify(appData));
         await fetch(DB_URL, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -457,6 +548,7 @@
         document.getElementById('viewCabinet').classList.add('hidden');
         document.getElementById('viewAdmin').classList.add('hidden');
         viewS.classList.remove('hidden');
+        renderClientShop();
       }
     }
 
@@ -476,7 +568,6 @@
       }
     }
 
-    // Загрузка фото ученика со сжатием
     function uploadStudentPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -559,29 +650,106 @@
         document.getElementById('cabProgressBar').style.width = "100%";
       }
 
+      // Активные тренировки ученика
       const mySchedule = [];
       if (appData.weeklySchedule) {
         Object.entries(appData.weeklySchedule).forEach(([key, stId]) => {
           if (stId === client.id) {
             const [day, time] = key.split('_');
-            mySchedule.push({ day, time });
+            mySchedule.push({ day, time, key });
           }
         });
       }
 
-      const cont = document.getElementById('cabMyScheduleList');
+      const bookingsCont = document.getElementById('cabMyBookingsList');
       if (mySchedule.length === 0) {
-        cont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">За вами пока не закреплено постоянное время. Напишите Кириллу!</p>';
+        bookingsCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">У вас пока нет активных тренировок. Запишитесь на свободное время ниже!</p>';
       } else {
-        cont.innerHTML = mySchedule.map(item => `
+        bookingsCont.innerHTML = mySchedule.map(item => `
           <div class="flex justify-between items-center bg-blue-950/40 border border-blue-500/40 p-2.5 rounded-xl text-xs">
             <div>
-              <span class="font-extrabold text-white text-sm"><i class="fa-regular fa-clock text-red-400 mr-1"></i> Каждый ${item.day} в ${item.time}</span>
-              <p class="text-[10px] text-blue-300 font-semibold mt-0.5">● Постоянная бронь (списание автоматически после занятия)</p>
+              <span class="font-extrabold text-white text-sm"><i class="fa-regular fa-clock text-red-400 mr-1"></i> ${item.day} в ${item.time}</span>
+              <p class="text-[10px] text-blue-300 font-semibold mt-0.5">● Закреплено (списание после занятия)</p>
             </div>
-            <span class="bg-red-600/30 text-red-300 text-[10px] px-2 py-1 rounded-lg font-bold border border-red-500/30">Закреплено</span>
+            <button type="button" onclick="cancelStudentBooking('${item.key}')" class="text-red-400 hover:text-red-500 font-bold text-xs hover:underline">
+              Отменить
+            </button>
           </div>
         `).join('');
+      }
+
+      // Свободные окна тренера
+      renderFreeSlotsList();
+    }
+
+    function renderFreeSlotsList() {
+      const freeSlots = [];
+      DAYS.forEach(day => {
+        if (currentFreeSlotsFilter === 'all' || currentFreeSlotsFilter === day) {
+          for (let h = 7; h <= 23; h++) {
+            const timeStr = (h < 10 ? '0' : '') + h + ':00';
+            const key = `${day}_${timeStr}`;
+            const studentId = appData.weeklySchedule ? appData.weeklySchedule[key] : null;
+            if (!studentId) {
+              freeSlots.push({ day, time: timeStr, key });
+            }
+          }
+        }
+      });
+
+      const freeCont = document.getElementById('cabFreeSlotsList');
+      if (freeSlots.length === 0) {
+        freeCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Нет свободных окон на этот период.</p>';
+      } else {
+        freeCont.innerHTML = freeSlots.map(s => `
+          <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs hover:border-blue-500 transition">
+            <div>
+              <span class="font-bold text-slate-200">${s.day}</span>
+              <span class="block text-red-500 font-black text-sm">${s.time}</span>
+            </div>
+            <button type="button" onclick="studentBookSlot('${s.key}')" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm">
+              Записаться
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function filterFreeSlots(day) {
+      currentFreeSlotsFilter = day;
+      const allButtons = ['all', ...DAYS];
+      allButtons.forEach(d => {
+        const btn = document.getElementById(`filterBtn${d}`);
+        if (btn) {
+          if (d === day) {
+            btn.className = "px-2 py-0.5 rounded-md font-bold bg-red-600 text-white";
+          } else {
+            btn.className = "px-1.5 py-0.5 rounded-md font-bold bg-slate-900 text-slate-400";
+          }
+        }
+      });
+      renderFreeSlotsList();
+    }
+
+    function studentBookSlot(key) {
+      const client = appData.clients.find(c => c.id === currentClientId);
+      if (!client) return;
+      if (client.balance <= 0) return alert("У вас 0 доступных занятий. Продлите абонемент через Telegram.");
+
+      if (!appData.weeklySchedule) appData.weeklySchedule = {};
+      appData.weeklySchedule[key] = client.id;
+      pushData();
+      renderCabinet();
+      const [day, time] = key.split('_');
+      alert(`Вы успешно записаны на ${day} в ${time}! Списание произойдёт после проведения тренировки.`);
+    }
+
+    function cancelStudentBooking(key) {
+      if (!confirm("Отменить эту запись?")) return;
+      if (appData.weeklySchedule) {
+        delete appData.weeklySchedule[key];
+        pushData();
+        renderCabinet();
       }
     }
 
@@ -624,6 +792,7 @@
     }
 
     function renderAdmin() {
+      // Список клиентов
       const clientsCont = document.getElementById('adminClientsList');
       clientsCont.innerHTML = appData.clients.map(c => `
         <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
@@ -643,9 +812,12 @@
           </div>
         </div>
       `).join('');
+
+      // Список товаров в админке
+      renderAdminProducts();
     }
 
-    // Модалка изменения профиля ученика
+    // Редактирование профиля ученика
     function openEditClientModal(id) {
       const c = appData.clients.find(x => x.id === id);
       if (!c) return;
@@ -675,7 +847,6 @@
 
       if (!newName || !newCode) return alert("Заполните имя и код!");
 
-      // Если изменился код — обновляем расписание
       if (oldId !== newCode && appData.weeklySchedule) {
         Object.keys(appData.weeklySchedule).forEach(k => {
           if (appData.weeklySchedule[k] === oldId) {
@@ -692,7 +863,7 @@
       pushData();
       closeEditClientModal();
       renderAdmin();
-      alert("Данные ученика обновлены!");
+      alert("Профиль ученика успешно обновлен!");
     }
 
     // === СЕТКА РАСПИСАНИЯ ===
@@ -799,6 +970,178 @@
       renderScheduleGrid();
     }
 
+    // === УПРАВЛЕНИЕ МАГАЗИНОМ ===
+
+    function handleNewProductPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          const maxSide = 400;
+
+          if (width > height && width > maxSide) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else if (height > maxSide) {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          tempNewProdImg = canvas.toDataURL('image/jpeg', 0.85);
+          const preview = document.getElementById('newProdPreview');
+          preview.src = tempNewProdImg;
+          preview.classList.remove('hidden');
+          document.getElementById('newProdPhotoStatus').textContent = "Фото загружено!";
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addNewProduct() {
+      const title = document.getElementById('newProdTitle').value.trim();
+      const category = document.getElementById('newProdCategory').value.trim() || 'Плавание';
+      const price = parseInt(document.getElementById('newProdPrice').value) || 0;
+      const colors = document.getElementById('newProdColors').value.trim();
+      const desc = document.getElementById('newProdDesc').value.trim();
+
+      if (!title || !price) return alert("Введите название и цену товара!");
+
+      if (!appData.products) appData.products = [];
+
+      appData.products.unshift({
+        id: Date.now(),
+        title,
+        category,
+        price,
+        colors,
+        desc: desc || "Качественная экипировка для тренировок.",
+        image: tempNewProdImg || "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80"
+      });
+
+      tempNewProdImg = '';
+      document.getElementById('newProdTitle').value = '';
+      document.getElementById('newProdCategory').value = '';
+      document.getElementById('newProdPrice').value = '';
+      document.getElementById('newProdColors').value = '';
+      document.getElementById('newProdDesc').value = '';
+      document.getElementById('newProdPreview').classList.add('hidden');
+      document.getElementById('newProdPhotoStatus').textContent = '';
+
+      pushData();
+      renderAdminProducts();
+      alert("Товар успешно добавлен в магазин!");
+    }
+
+    function renderAdminProducts() {
+      const cont = document.getElementById('adminProductsList');
+      if (!appData.products || appData.products.length === 0) {
+        cont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Товаров нет. Добавьте первый товар выше.</p>';
+        return;
+      }
+
+      cont.innerHTML = appData.products.map(p => `
+        <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
+          <div class="flex items-center gap-2 truncate pr-2">
+            <img src="${p.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-950 flex-shrink-0 border border-slate-800">
+            <div class="truncate">
+              <span class="text-[9px] bg-red-950 text-red-400 px-1 py-0.5 rounded font-extrabold uppercase">${p.category}</span>
+              <p class="font-bold text-white truncate">${p.title} (${p.price} ₽)</p>
+            </div>
+          </div>
+          <div class="flex gap-1 flex-shrink-0">
+            <button type="button" onclick="openEditProductModal(${p.id})" class="w-6 h-6 bg-blue-950 text-blue-300 border border-blue-500/40 rounded flex items-center justify-center">
+              <i class="fa-solid fa-pen text-[10px]"></i>
+            </button>
+            <button type="button" onclick="deleteProduct(${p.id})" class="w-6 h-6 bg-red-950 text-red-400 rounded flex items-center justify-center">
+              <i class="fa-regular fa-trash-can text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openEditProductModal(id) {
+      const p = appData.products.find(x => x.id === id);
+      if (!p) return;
+
+      document.getElementById('editProductId').value = p.id;
+      document.getElementById('editProdTitle').value = p.title;
+      document.getElementById('editProdCategory').value = p.category;
+      document.getElementById('editProdPrice').value = p.price;
+      document.getElementById('editProdColors').value = p.colors || '';
+      document.getElementById('editProdDesc').value = p.desc || '';
+
+      document.getElementById('editProductModal').classList.remove('hidden');
+    }
+
+    function closeEditProductModal() {
+      document.getElementById('editProductModal').classList.add('hidden');
+    }
+
+    function saveEditedProduct() {
+      const id = parseInt(document.getElementById('editProductId').value);
+      const p = appData.products.find(x => x.id === id);
+      if (!p) return;
+
+      p.title = document.getElementById('editProdTitle').value.trim();
+      p.category = document.getElementById('editProdCategory').value.trim();
+      p.price = parseInt(document.getElementById('editProdPrice').value) || 0;
+      p.colors = document.getElementById('editProdColors').value.trim();
+      p.desc = document.getElementById('editProdDesc').value.trim();
+
+      pushData();
+      closeEditProductModal();
+      renderAdminProducts();
+      alert("Товар обновлен!");
+    }
+
+    function deleteProduct(id) {
+      if (!confirm("Удалить этот товар?")) return;
+      appData.products = appData.products.filter(x => x.id !== id);
+      pushData();
+      renderAdminProducts();
+    }
+
+    function renderClientShop() {
+      const cont = document.getElementById('clientShopProducts');
+      if (!appData.products || appData.products.length === 0) {
+        cont.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Товары скоро появятся в каталоге.</p>';
+        return;
+      }
+
+      cont.innerHTML = appData.products.map(p => `
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+          <img src="${p.image}" class="w-16 h-16 rounded-xl object-cover bg-slate-950 flex-shrink-0 border border-slate-800">
+          <div class="flex-1 min-w-0">
+            <span class="text-[9px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded font-extrabold uppercase">${p.category}</span>
+            <h3 class="font-bold text-white text-xs truncate mt-0.5">${p.title}</h3>
+            ${p.colors ? `<p class="text-[10px] text-blue-300 truncate">Цвета: ${p.colors}</p>` : ''}
+            <p class="text-[11px] text-slate-400 line-clamp-1">${p.desc}</p>
+            <div class="flex justify-between items-center mt-1.5">
+              <span class="font-black text-red-500 text-sm">${p.price} ₽</span>
+              <a href="https://t.me/kkkkk_ooooo?text=${encodeURIComponent('Кирилл, хочу заказать экипировку: ' + p.title + ' (' + p.price + ' ₽)')}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-1 rounded-lg transition">
+                Заказать
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // === ДРУГИЕ ОПЕРАЦИИ ТРЕНЕРА ===
+
     function addNewClient() {
       const name = document.getElementById('newUName').value.trim();
       const code = document.getElementById('newUCode').value.trim();
@@ -878,7 +1221,7 @@
       else if (!document.getElementById('viewAdmin').classList.contains('hidden')) renderAdmin();
     }
 
-    // Запуск
+    // Запуск синхронизации
     syncData();
     setInterval(syncData, 8000);
   </script>
