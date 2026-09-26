@@ -26,7 +26,7 @@
           <h1 class="text-2xl font-black tracking-tight leading-tight">Кирилл Онипко</h1>
           <p class="text-blue-200 text-xs font-medium">Персональный тренер по плаванию</p>
         </div>
-        <button type="button" onclick="openAdminModal()" class="bg-black/40 active:scale-90 p-3 rounded-full transition text-white border border-white/10">
+        <button type="button" onclick="openAdminModal()" class="bg-black/40 active:scale-90 p-3 rounded-full transition text-white border border-white/10" title="Тренер">
           <i class="fa-solid fa-lock text-sm"></i>
         </button>
       </div>
@@ -44,7 +44,7 @@
     <!-- Вкладки навигации -->
     <nav class="flex border-b border-slate-800 bg-slate-900/90 text-xs font-bold text-slate-400">
       <button type="button" onclick="switchMainTab('booking')" id="tabBtnBooking" class="flex-1 py-3 text-center border-b-2 border-red-600 text-red-500 transition flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-person-swimming"></i> Кабинет и запись
+        <i class="fa-solid fa-person-swimming"></i> Кабинет и расписание
       </button>
       <button type="button" onclick="switchMainTab('shop')" id="tabBtnShop" class="flex-1 py-3 text-center border-b-2 border-transparent hover:text-slate-200 transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-bag-shopping"></i> Экипировка
@@ -70,10 +70,19 @@
       <!-- 2. Личный кабинет ученика -->
       <section id="viewCabinet" class="hidden space-y-4">
         <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl border border-blue-900/50 flex justify-between items-center shadow-md">
-          <div>
-            <span class="text-[10px] text-red-400 font-extrabold uppercase">Пловец</span>
-            <h2 id="cabClientName" class="text-base font-black text-white leading-tight">Ученик</h2>
-            <p class="text-[11px] text-slate-400">Код: <b id="cabClientCode">001</b></p>
+          <div class="flex items-center gap-3">
+            <label class="relative cursor-pointer group" title="Нажмите, чтобы изменить фото">
+              <img id="cabClientAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-13 h-13 rounded-full object-cover border-2 border-red-500 shadow-md">
+              <span class="absolute bottom-0 right-0 bg-red-600 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-slate-900 shadow">
+                <i class="fa-solid fa-camera"></i>
+              </span>
+              <input type="file" accept="image/*" class="hidden" onchange="uploadStudentPhoto(event)">
+            </label>
+            <div>
+              <span class="text-[10px] text-red-400 font-extrabold uppercase">Пловец</span>
+              <h2 id="cabClientName" class="text-base font-black text-white leading-tight">Ученик</h2>
+              <p class="text-[11px] text-slate-400">Код: <b id="cabClientCode">001</b></p>
+            </div>
           </div>
           <div class="text-right">
             <span class="text-[10px] text-slate-400 font-semibold uppercase">Баланс</span>
@@ -135,16 +144,10 @@
           </div>
         </div>
 
-        <!-- Записи клиента -->
+        <!-- Постоянное расписание ученика -->
         <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваши тренировки:</span>
-          <div id="cabMySlotsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-        </div>
-
-        <!-- Свободные окна тренера -->
-        <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Свободное время тренера (Пн–Сб)</span>
-          <div id="cabFreeSlotsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block">Ваше постоянное расписание:</span>
+          <div id="cabMyScheduleList" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
         </div>
 
         <button type="button" onclick="logout()" class="w-full text-center text-xs text-slate-500 hover:text-red-400 py-2 font-semibold">
@@ -157,21 +160,16 @@
         <div class="flex justify-between items-center pb-2 border-b border-slate-800">
           <div>
             <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">Панель тренера</span>
-            <h2 class="text-base font-black text-white">Управление графиком и учениками</h2>
+            <h2 class="text-base font-black text-white">Управление расписанием и учениками</h2>
           </div>
           <button type="button" onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-slate-300">Выйти</button>
         </div>
 
-        <!-- Генератор окон 07:00 - 23:00 -->
-        <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded-2xl text-xs space-y-2">
-          <span class="font-bold text-blue-200 block">Открыть сетку окон (07:00 - 23:00, Пн-Сб):</span>
-          <div class="flex gap-2">
-            <input id="adminDateInput" type="date" class="p-2 border border-slate-700 rounded-xl bg-slate-900 text-white font-bold flex-1" />
-            <button type="button" onclick="generateBatchSlots()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-md">
-              + 17 окон
-            </button>
-          </div>
-        </div>
+        <!-- Кнопка вызова отдельной сетки окон -->
+        <button type="button" onclick="openScheduleModal()" class="w-full bg-gradient-to-r from-blue-700 to-red-600 hover:from-blue-600 hover:to-red-500 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-sm transition active:scale-95 border border-red-500/30">
+          <i class="fa-solid fa-calendar-days text-base"></i>
+          📅 Открыть сетку окон (Пн–Сб, 07:00–23:00)
+        </button>
 
         <!-- Добавить ученика -->
         <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-xs space-y-2">
@@ -186,16 +184,10 @@
           </div>
         </div>
 
-        <!-- Список окон и закрепление -->
-        <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Окна и закрепление учеников:</span>
-          <div id="adminSlotsList" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
-        </div>
-
-        <!-- Список учеников -->
+        <!-- Список учеников с кнопкой изменения профиля -->
         <div>
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 block">Список учеников:</span>
-          <div id="adminClientsList" class="space-y-1.5 max-h-44 overflow-y-auto pr-1"></div>
+          <div id="adminClientsList" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
         </div>
       </section>
 
@@ -229,6 +221,83 @@
       </section>
 
     </main>
+
+    <!-- ОТДЕЛЬНАЯ ПЛАШКА: Сетка расписания Пн-Сб с окнами -->
+    <div id="scheduleModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-4 relative shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-sm font-black text-white">Сетка расписания</h3>
+            <p class="text-[10px] text-slate-400">Нажмите на плитку, чтобы закрепить ученика</p>
+          </div>
+          <button type="button" onclick="closeScheduleModal()" class="w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Переключатель дней недели: Пн-Сб -->
+        <div class="flex gap-1 py-2 overflow-x-auto no-scrollbar border-b border-slate-800">
+          <button type="button" onclick="selectScheduleDay('Пн')" id="dayBtnПн" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-red-600 text-white">Пн</button>
+          <button type="button" onclick="selectScheduleDay('Вт')" id="dayBtnВт" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Вт</button>
+          <button type="button" onclick="selectScheduleDay('Ср')" id="dayBtnСр" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Ср</button>
+          <button type="button" onclick="selectScheduleDay('Чт')" id="dayBtnЧт" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Чт</button>
+          <button type="button" onclick="selectScheduleDay('Пт')" id="dayBtnПт" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Пт</button>
+          <button type="button" onclick="selectScheduleDay('Сб')" id="dayBtnСб" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400">Сб</button>
+        </div>
+
+        <!-- Квадраты окон с 07:00 до 23:00 -->
+        <div id="gridSlotsContainer" class="grid grid-cols-2 gap-2 p-2 overflow-y-auto flex-1 my-2"></div>
+
+        <button type="button" onclick="closeScheduleModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs transition">
+          Готово (закрыть)
+        </button>
+      </div>
+    </div>
+
+    <!-- Модалка выбора ученика для слота -->
+    <div id="assignStudentModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-4 shadow-2xl text-center">
+        <h3 id="assignModalTitle" class="text-sm font-black text-white mb-2">Закрепить ученика</h3>
+        <p class="text-[11px] text-slate-400 mb-3">Выберите, кто будет тренироваться в это время:</p>
+        <div id="assignStudentsList" class="space-y-1.5 max-h-56 overflow-y-auto mb-3 text-left"></div>
+        <button type="button" onclick="closeAssignModal()" class="w-full bg-slate-800 text-slate-400 py-2 rounded-xl text-xs font-bold">
+          Отмена
+        </button>
+      </div>
+    </div>
+
+    <!-- Модалка редактирования ученика (для тренера) -->
+    <div id="editClientModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-5 relative shadow-2xl">
+        <button type="button" onclick="closeEditClientModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-base font-black text-white mb-3">Изменить ученика</h3>
+        <input type="hidden" id="editClientId" />
+        
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">ФИО:</label>
+            <input id="editClientName" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Код входа:</label>
+            <input id="editClientCode" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Остаток занятий:</label>
+            <input id="editClientBal" type="number" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Общий наплав (метры):</label>
+            <input id="editClientMeters" type="number" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold" />
+          </div>
+          <button type="button" onclick="saveEditedClient()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg mt-2">
+            Сохранить изменения
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Модалка ввода PIN тренера -->
     <div id="adminModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -269,6 +338,11 @@
     const COACH_PIN = "1234";
     const DB_URL = "https://onipko-coach-default-rtdb.europe-west1.firebasedatabase.app/app_data.json";
 
+    const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const DAY_MAP_INDEX = { 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
+    let activeScheduleDay = 'Пн';
+    let targetSlotTime = null;
+
     const ROUTES = [
       { name: "СК «Чемпион» (ВВГУ / Гоголя)", km: 3.5 },
       { name: "Вторая Речка (Автовокзал)", km: 8.0 },
@@ -284,20 +358,19 @@
 
     let appData = {
       clients: [
-        { id: "001", name: "Первый ученик", balance: 8, meters: 0 }
+        { id: "001", name: "Первый ученик", balance: 8, meters: 0, photo: "" }
       ],
-      slots: []
+      weeklySchedule: {},
+      deductedHistory: {}
     };
 
-    // Загрузка из локального кэша
     try {
-      const local = JSON.parse(localStorage.getItem('onipko_cache'));
-      if (local && local.clients && local.clients.length) appData = local;
+      const local = JSON.parse(localStorage.getItem('onipko_cache_v3'));
+      if (local && local.clients) appData = local;
     } catch(e) {}
 
     let currentClientId = null;
 
-    // Фоновая синхронизация с Firebase (через стандартный REST без зависаний)
     async function syncData() {
       try {
         const res = await fetch(DB_URL, { cache: 'no-store' });
@@ -305,11 +378,13 @@
           const cloud = await res.json();
           if (cloud && cloud.clients) {
             appData = cloud;
-            localStorage.setItem('onipko_cache', JSON.stringify(appData));
+            if (!appData.weeklySchedule) appData.weeklySchedule = {};
+            if (!appData.deductedHistory) appData.deductedHistory = {};
+            localStorage.setItem('onipko_cache_v3', JSON.stringify(appData));
           } else {
             pushData();
           }
-          checkExpiredSessions();
+          checkCalendarDeduction();
           refreshActiveView();
         }
       } catch(e) {}
@@ -317,7 +392,7 @@
 
     async function pushData() {
       try {
-        localStorage.setItem('onipko_cache', JSON.stringify(appData));
+        localStorage.setItem('onipko_cache_v3', JSON.stringify(appData));
         await fetch(DB_URL, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -326,28 +401,43 @@
       } catch(e) {}
     }
 
-    // Автоматическое списание тренировок строго после завершения по времени
-    function checkExpiredSessions() {
-      if (!appData.slots || !appData.slots.length) return;
+    function checkCalendarDeduction() {
+      if (!appData.weeklySchedule) return;
       const now = new Date();
-      let changed = false;
+      const currentDayName = DAY_MAP_INDEX[now.getDay()];
+      if (!currentDayName) return;
 
-      appData.slots.forEach(slot => {
-        if (slot.bookedBy && !slot.completed && slot.date && slot.time) {
-          const [h, m] = slot.time.split(':').map(Number);
-          const [y, mon, d] = slot.date.split('-').map(Number);
-          const sessionEnd = new Date(y, mon - 1, d, h, m);
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${date}`;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-          if (now >= sessionEnd) {
-            slot.completed = true;
-            const cl = appData.clients.find(c => c.id === slot.bookedBy);
-            if (cl) cl.balance = Math.max(0, (cl.balance || 0) - 1);
-            changed = true;
+      let hasDeductions = false;
+
+      Object.entries(appData.weeklySchedule).forEach(([key, studentId]) => {
+        if (!studentId) return;
+        const [day, time] = key.split('_');
+
+        if (day === currentDayName) {
+          const [h, m] = time.split(':').map(Number);
+          const slotMinutes = h * 60 + m;
+
+          if (currentMinutes >= slotMinutes) {
+            const historyKey = `${todayStr}_${key}`;
+            if (!appData.deductedHistory[historyKey]) {
+              const student = appData.clients.find(c => c.id === studentId);
+              if (student) {
+                student.balance = Math.max(0, (student.balance || 0) - 1);
+                appData.deductedHistory[historyKey] = true;
+                hasDeductions = true;
+              }
+            }
           }
         }
       });
 
-      if (changed) pushData();
+      if (hasDeductions) pushData();
     }
 
     function switchMainTab(tab) {
@@ -382,8 +472,48 @@
         document.getElementById('viewCabinet').classList.remove('hidden');
         renderCabinet();
       } else {
-        alert("Ученик с кодом " + code + " не найден. Напишите тренеру.");
+        alert("Ученик с кодом " + code + " не найден. Напишите Кириллу.");
       }
+    }
+
+    // Загрузка фото ученика со сжатием
+    function uploadStudentPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          const maxSide = 250;
+
+          if (width > height && width > maxSide) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else if (height > maxSide) {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          const client = appData.clients.find(c => c.id === currentClientId);
+          if (client) {
+            client.photo = compressed;
+            pushData();
+            renderCabinet();
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function renderCabinet() {
@@ -393,6 +523,9 @@
       document.getElementById('cabClientName').textContent = client.name;
       document.getElementById('cabClientCode').textContent = client.id;
       document.getElementById('cabClientBal').textContent = client.balance;
+      
+      const avatarEl = document.getElementById('cabClientAvatar');
+      avatarEl.src = client.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
 
       const totalKm = ((client.meters || 0) / 1000).toFixed(1);
       document.getElementById('cabTotalKm').textContent = totalKm + " км";
@@ -426,62 +559,30 @@
         document.getElementById('cabProgressBar').style.width = "100%";
       }
 
-      const mySlots = appData.slots.filter(s => s.bookedBy === client.id);
-      const myCont = document.getElementById('cabMySlotsList');
-      if (mySlots.length === 0) {
-        myCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">Нет активных тренировок.</p>';
+      const mySchedule = [];
+      if (appData.weeklySchedule) {
+        Object.entries(appData.weeklySchedule).forEach(([key, stId]) => {
+          if (stId === client.id) {
+            const [day, time] = key.split('_');
+            mySchedule.push({ day, time });
+          }
+        });
+      }
+
+      const cont = document.getElementById('cabMyScheduleList');
+      if (mySchedule.length === 0) {
+        cont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-3 rounded-xl border border-slate-800">За вами пока не закреплено постоянное время. Напишите Кириллу!</p>';
       } else {
-        myCont.innerHTML = mySlots.map(s => `
-          <div class="flex justify-between items-center ${s.completed ? 'bg-slate-900 border-slate-800 opacity-60' : 'bg-blue-950/40 border-blue-500/40'} border p-2.5 rounded-xl text-xs">
+        cont.innerHTML = mySchedule.map(item => `
+          <div class="flex justify-between items-center bg-blue-950/40 border border-blue-500/40 p-2.5 rounded-xl text-xs">
             <div>
-              <span class="font-bold text-white">${s.date || s.day}, ${s.time}</span>
-              <p class="text-[10px] ${s.completed ? 'text-slate-400 font-semibold' : 'text-red-400 font-bold'}">
-                ${s.completed ? '✓ Проведено (списано)' : '● Запланировано (спишется после тренировки)'}
-              </p>
+              <span class="font-extrabold text-white text-sm"><i class="fa-regular fa-clock text-red-400 mr-1"></i> Каждый ${item.day} в ${item.time}</span>
+              <p class="text-[10px] text-blue-300 font-semibold mt-0.5">● Постоянная бронь (списание автоматически после занятия)</p>
             </div>
-            ${!s.completed ? `<button type="button" onclick="cancelMySlot(${s.id})" class="text-red-400 font-semibold hover:underline">Отменить</button>` : ''}
+            <span class="bg-red-600/30 text-red-300 text-[10px] px-2 py-1 rounded-lg font-bold border border-red-500/30">Закреплено</span>
           </div>
         `).join('');
       }
-
-      const freeSlots = appData.slots.filter(s => !s.bookedBy && !s.completed);
-      const freeCont = document.getElementById('cabFreeSlotsList');
-      if (freeSlots.length === 0) {
-        freeCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Нет свободных окон.</p>';
-      } else {
-        freeCont.innerHTML = freeSlots.map(s => `
-          <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs hover:border-blue-500 transition">
-            <div>
-              <span class="font-bold text-slate-200">${s.date ? s.date + ' (' + s.day + ')' : s.day}</span>
-              <span class="block text-red-500 font-black text-sm">${s.time}</span>
-            </div>
-            <button type="button" onclick="bookMySlot(${s.id})" class="bg-blue-600 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold transition">
-              Записаться
-            </button>
-          </div>
-        `).join('');
-      }
-    }
-
-    function bookMySlot(slotId) {
-      const client = appData.clients.find(c => c.id === currentClientId);
-      if (client.balance <= 0) return alert("У вас 0 доступных занятий. Продлите абонемент через Telegram.");
-      const slot = appData.slots.find(s => s.id === slotId);
-      if (!slot) return;
-      slot.bookedBy = client.id;
-      slot.completed = false;
-      pushData();
-      renderCabinet();
-      alert(`Вы записаны на ${slot.date} в ${slot.time}! Списание произойдёт после проведения тренировки.`);
-    }
-
-    function cancelMySlot(slotId) {
-      const slot = appData.slots.find(s => s.id === slotId);
-      if (!slot) return;
-      slot.bookedBy = null;
-      slot.completed = false;
-      pushData();
-      renderCabinet();
     }
 
     function toggleCheckItem(btn) {
@@ -494,6 +595,8 @@
         btn.classList.remove('border-red-500', 'bg-red-950/40', 'text-white', 'font-bold');
       }
     }
+
+    // === ПАНЕЛЬ ТРЕНЕРА ===
 
     function openAdminModal() {
       const modal = document.getElementById('adminModal');
@@ -521,43 +624,19 @@
     }
 
     function renderAdmin() {
-      const sortedSlots = [...appData.slots].sort((a,b) => (a.date || '') > (b.date || '') ? 1 : -1);
-      const slotsCont = document.getElementById('adminSlotsList');
-
-      if (sortedSlots.length === 0) {
-        slotsCont.innerHTML = '<p class="text-xs text-slate-500 bg-slate-900 p-2.5 rounded-xl border border-slate-800">Окон нет. Добавьте их выше.</p>';
-      } else {
-        slotsCont.innerHTML = sortedSlots.map(s => `
-          <div class="bg-slate-900 border ${s.completed ? 'border-slate-800 opacity-60' : s.bookedBy ? 'border-red-500/50' : 'border-slate-800'} p-2.5 rounded-xl text-xs space-y-1.5">
-            <div class="flex justify-between items-center">
-              <div>
-                <span class="font-bold text-white">${s.date || s.day} | ${s.time}</span>
-                ${s.completed ? '<span class="ml-2 text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold">Проведено (списано)</span>' : ''}
-              </div>
-              <button type="button" onclick="deleteSlot(${s.id})" class="text-red-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] text-slate-400">Пловец:</span>
-              <select onchange="assignSlotCoach(${s.id}, this.value)" class="p-1.5 border border-slate-700 rounded-lg bg-slate-950 text-white flex-1 font-semibold text-xs">
-                <option value="">-- Свободное окно --</option>
-                ${appData.clients.map(c => `
-                  <option value="${c.id}" ${s.bookedBy === c.id ? 'selected' : ''}>${c.name} (${c.id}) [Баланс: ${c.balance}]</option>
-                `).join('')}
-              </select>
-            </div>
-          </div>
-        `).join('');
-      }
-
       const clientsCont = document.getElementById('adminClientsList');
       clientsCont.innerHTML = appData.clients.map(c => `
         <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
-          <div>
-            <p class="font-bold text-white">${c.name} <span class="text-slate-400">(${c.id})</span></p>
-            <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
+          <div class="flex items-center gap-2 min-w-0 pr-1">
+            <img src="${c.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-8 h-8 rounded-full object-cover border border-slate-700 flex-shrink-0">
+            <div class="truncate">
+              <p class="font-bold text-white truncate">${c.name} <span class="text-slate-400">(${c.id})</span></p>
+              <p class="text-blue-400 font-semibold">${c.balance} зан. | <span class="text-red-400 font-bold">${((c.meters || 0)/1000).toFixed(1)} км</span></p>
+            </div>
           </div>
-          <div class="flex items-center gap-1">
-            <button type="button" onclick="coachAddMeters('${c.id}')" class="px-2 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded-lg text-[10px]">+Метры</button>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button type="button" onclick="openEditClientModal('${c.id}')" class="w-6 h-6 bg-blue-950 text-blue-300 border border-blue-500/40 rounded flex items-center justify-center" title="Редактировать"><i class="fa-solid fa-pen text-[10px]"></i></button>
+            <button type="button" onclick="coachAddMeters('${c.id}')" class="px-1.5 py-1 bg-red-950 border border-red-500/40 text-red-300 font-bold rounded text-[10px]">+М</button>
             <button type="button" onclick="changeBal('${c.id}', 1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">+</button>
             <button type="button" onclick="changeBal('${c.id}', -1)" class="w-6 h-6 bg-slate-800 text-white font-bold rounded">-</button>
             <button type="button" onclick="deleteClient('${c.id}')" class="w-6 h-6 bg-red-950 text-red-400 rounded"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
@@ -566,49 +645,158 @@
       `).join('');
     }
 
-    function generateBatchSlots() {
-      const dateVal = document.getElementById('adminDateInput').value;
-      if (!dateVal) return alert("Выберите дату!");
+    // Модалка изменения профиля ученика
+    function openEditClientModal(id) {
+      const c = appData.clients.find(x => x.id === id);
+      if (!c) return;
 
-      const daysOfWeek = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-      const d = new Date(dateVal);
-      const dayName = daysOfWeek[d.getDay()];
+      document.getElementById('editClientId').value = c.id;
+      document.getElementById('editClientName').value = c.name;
+      document.getElementById('editClientCode').value = c.id;
+      document.getElementById('editClientBal').value = c.balance;
+      document.getElementById('editClientMeters').value = c.meters || 0;
 
-      if (dayName === "Воскресенье") return alert("Воскресенье — выходной. Выберите Пн–Сб.");
+      document.getElementById('editClientModal').classList.remove('hidden');
+    }
+
+    function closeEditClientModal() {
+      document.getElementById('editClientModal').classList.add('hidden');
+    }
+
+    function saveEditedClient() {
+      const oldId = document.getElementById('editClientId').value;
+      const c = appData.clients.find(x => x.id === oldId);
+      if (!c) return;
+
+      const newName = document.getElementById('editClientName').value.trim();
+      const newCode = document.getElementById('editClientCode').value.trim();
+      const newBal = parseInt(document.getElementById('editClientBal').value) || 0;
+      const newMeters = parseInt(document.getElementById('editClientMeters').value) || 0;
+
+      if (!newName || !newCode) return alert("Заполните имя и код!");
+
+      // Если изменился код — обновляем расписание
+      if (oldId !== newCode && appData.weeklySchedule) {
+        Object.keys(appData.weeklySchedule).forEach(k => {
+          if (appData.weeklySchedule[k] === oldId) {
+            appData.weeklySchedule[k] = newCode;
+          }
+        });
+      }
+
+      c.name = newName;
+      c.id = newCode;
+      c.balance = newBal;
+      c.meters = newMeters;
+
+      pushData();
+      closeEditClientModal();
+      renderAdmin();
+      alert("Данные ученика обновлены!");
+    }
+
+    // === СЕТКА РАСПИСАНИЯ ===
+
+    function openScheduleModal() {
+      document.getElementById('scheduleModal').classList.remove('hidden');
+      selectScheduleDay(activeScheduleDay);
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').classList.add('hidden');
+    }
+
+    function selectScheduleDay(day) {
+      activeScheduleDay = day;
+      DAYS.forEach(d => {
+        const btn = document.getElementById(`dayBtn${d}`);
+        if (d === day) {
+          btn.className = "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-red-600 text-white shadow-md";
+        } else {
+          btn.className = "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition bg-slate-950 text-slate-400";
+        }
+      });
+      renderScheduleGrid();
+    }
+
+    function renderScheduleGrid() {
+      const container = document.getElementById('gridSlotsContainer');
+      let html = '';
 
       for (let h = 7; h <= 23; h++) {
         const timeStr = (h < 10 ? '0' : '') + h + ':00';
-        const exists = appData.slots.some(s => s.date === dateVal && s.time === timeStr);
-        if (!exists) {
-          appData.slots.push({
-            id: Date.now() + Math.random(),
-            date: dateVal,
-            day: dayName,
-            time: timeStr,
-            bookedBy: null,
-            completed: false
-          });
-        }
+        const key = `${activeScheduleDay}_${timeStr}`;
+        const studentId = (appData.weeklySchedule && appData.weeklySchedule[key]) ? appData.weeklySchedule[key] : null;
+        const student = studentId ? appData.clients.find(c => c.id === studentId) : null;
+
+        html += `
+          <button type="button" onclick="openAssignModal('${timeStr}')" class="p-3 rounded-2xl border text-left transition flex flex-col justify-between h-20 ${student ? 'bg-gradient-to-br from-blue-950 to-slate-900 border-red-500/50 shadow-md' : 'bg-slate-950 border-slate-800 hover:border-blue-500'}">
+            <div class="flex justify-between items-start w-full">
+              <span class="text-sm font-black ${student ? 'text-red-400' : 'text-slate-300'}">${timeStr}</span>
+              ${student ? '<i class="fa-solid fa-user-check text-xs text-red-500"></i>' : '<span class="text-[10px] text-slate-600">+ Свободно</span>'}
+            </div>
+            <div class="w-full">
+              <p class="text-xs font-bold truncate ${student ? 'text-white' : 'text-slate-600'}">
+                ${student ? student.name : 'Нажмите, чтобы записать'}
+              </p>
+              ${student ? `<span class="text-[9px] text-blue-300 block">Остаток: ${student.balance} зан.</span>` : ''}
+            </div>
+          </button>
+        `;
       }
-      pushData();
-      renderAdmin();
-      alert(`Сетка 07:00–23:00 на ${dayName} (${dateVal}) создана!`);
+
+      container.innerHTML = html;
     }
 
-    function assignSlotCoach(slotId, clientId) {
-      const slot = appData.slots.find(s => s.id === slotId);
-      if (!slot) return;
-      slot.bookedBy = clientId || null;
-      slot.completed = false;
-      pushData();
-      renderAdmin();
+    function openAssignModal(timeStr) {
+      targetSlotTime = timeStr;
+      const key = `${activeScheduleDay}_${timeStr}`;
+      const currentStudentId = appData.weeklySchedule ? appData.weeklySchedule[key] : null;
+
+      document.getElementById('assignModalTitle').textContent = `${activeScheduleDay} в ${timeStr}`;
+      const list = document.getElementById('assignStudentsList');
+
+      let html = `
+        <button type="button" onclick="setSlotStudent(null)" class="w-full text-left p-2.5 rounded-xl border border-dashed border-slate-700 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-500 text-xs font-semibold mb-1 flex items-center justify-between">
+          <span>❌ Сделать свободным окном</span>
+          ${!currentStudentId ? '<i class="fa-solid fa-check text-emerald-400"></i>' : ''}
+        </button>
+      `;
+
+      appData.clients.forEach(c => {
+        const isSelected = c.id === currentStudentId;
+        html += `
+          <button type="button" onclick="setSlotStudent('${c.id}')" class="w-full text-left p-2.5 rounded-xl border transition text-xs font-bold mb-1 flex items-center justify-between ${isSelected ? 'bg-red-600/30 border-red-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-blue-500'}">
+            <div>
+              <p class="font-bold">${c.name} <span class="text-[10px] text-slate-400">(${c.id})</span></p>
+              <p class="text-[10px] text-blue-400 font-normal">Баланс: ${c.balance} зан.</p>
+            </div>
+            ${isSelected ? '<i class="fa-solid fa-check text-red-400"></i>' : ''}
+          </button>
+        `;
+      });
+
+      list.innerHTML = html;
+      document.getElementById('assignStudentModal').classList.remove('hidden');
     }
 
-    function deleteSlot(slotId) {
-      if (!confirm("Удалить это окно?")) return;
-      appData.slots = appData.slots.filter(s => s.id !== slotId);
+    function closeAssignModal() {
+      document.getElementById('assignStudentModal').classList.add('hidden');
+    }
+
+    function setSlotStudent(studentId) {
+      if (!appData.weeklySchedule) appData.weeklySchedule = {};
+      const key = `${activeScheduleDay}_${targetSlotTime}`;
+
+      if (studentId) {
+        appData.weeklySchedule[key] = studentId;
+      } else {
+        delete appData.weeklySchedule[key];
+      }
+
       pushData();
-      renderAdmin();
+      closeAssignModal();
+      renderScheduleGrid();
     }
 
     function addNewClient() {
@@ -617,7 +805,7 @@
       const bal = parseInt(document.getElementById('newUBal').value) || 0;
       if (!name || !code) return alert("Заполните имя и код!");
 
-      appData.clients.push({ id: code, name: name, balance: bal, meters: 0 });
+      appData.clients.push({ id: code, name: name, balance: bal, meters: 0, photo: "" });
       pushData();
       renderAdmin();
       document.getElementById('newUName').value = '';
@@ -637,7 +825,11 @@
     function deleteClient(id) {
       if (!confirm("Удалить ученика?")) return;
       appData.clients = appData.clients.filter(x => x.id !== id);
-      appData.slots.forEach(s => { if (s.bookedBy === id) s.bookedBy = null; });
+      if (appData.weeklySchedule) {
+        Object.keys(appData.weeklySchedule).forEach(k => {
+          if (appData.weeklySchedule[k] === id) delete appData.weeklySchedule[k];
+        });
+      }
       pushData();
       renderAdmin();
     }
